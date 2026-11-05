@@ -7,14 +7,16 @@ vi.mock('qrcode', () => ({
   default: { toDataURL: vi.fn() },
 }));
 vi.mock('jspdf', () => ({
-  jsPDF: vi.fn(() => ({
-    setFont: vi.fn(),
-    setFontSize: vi.fn(),
-    text: vi.fn(),
-    addImage: vi.fn(),
-    splitTextToSize: vi.fn((text) => [text]),
-    save: vi.fn(),
-  })),
+  jsPDF: vi.fn(function MockJsPdf() {
+    return {
+      setFont: vi.fn(),
+      setFontSize: vi.fn(),
+      text: vi.fn(),
+      addImage: vi.fn(),
+      splitTextToSize: vi.fn((text) => [text]),
+      save: vi.fn(),
+    };
+  }),
 }));
 
 describe('QR generation', () => {

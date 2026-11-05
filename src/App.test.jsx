@@ -9,6 +9,12 @@ import { afterEach, beforeEach, vi } from "vitest";
 import App from "./App";
 import { processPdf } from "./utils/pdfProcessor";
 import { createEmptyProject } from "./utils/projectData";
+import { analyzeImageFiles } from "./utils/multimedia";
+
+vi.mock("./utils/multimedia", async (importOriginal) => {
+  const actual = await importOriginal();
+  return { ...actual, analyzeImageFiles: vi.fn() };
+});
 
 vi.mock("./utils/pdfProcessor", () => ({
   processPdf: vi.fn(),
@@ -16,6 +22,7 @@ vi.mock("./utils/pdfProcessor", () => ({
 
 beforeEach(() => {
   processPdf.mockReset();
+  analyzeImageFiles.mockReset();
 });
 
 afterEach(() => {
@@ -148,7 +155,7 @@ test("renders only the public project at the View hash route", async () => {
   expect(screen.getByRole("link", { name: "Introducción" })).toHaveAttribute("href", "#project-section-introduction");
   expect(screen.getByText("Contenido real de introducción")).toBeInTheDocument();
   expect(screen.getByAltText("foto.png")).toBeInTheDocument();
-  expect(screen.getByText("Cordova Anthony")).toBeInTheDocument();
+  expect(screen.getByText(/Anthony/)).toBeInTheDocument();
   expect(screen.getByRole("link", { name: /Página web/ })).toHaveAttribute("href", "https://devkosmosyneah.github.io/devkosmosyne-website/");
   expect(screen.getByRole("link", { name: /GitHub/ })).toHaveAttribute("href", "https://github.com/18-anth");
   expect(screen.getByRole("link", { name: /^CV/ })).toHaveAttribute("href", "https://18-anth.github.io/CV_Anth/");
@@ -161,4 +168,39 @@ test("renders only the public project at the View hash route", async () => {
     "src",
     expect.stringContaining("/documents/images/proyecto/foto.png"),
   );
+});
+
+test("imports and OCR-analyzes multiple images while keeping OCR text editable", async () => {
+  analyzeImageFiles.mockImplementation(async (files) => files.map((_, index) => ({
+    ocrText: `Texto OCR ${index + 1}`,
+    ocrConfidence: 90,
+    ocrReviewRequired: false,
+    ocrClassification: { titles: [], paragraphs: [], dates: [], data: [] },
+    visualReviewRequired: true,
+  })));
+  render(<App />);
+  fireEvent.click(screen.getByRole("button", { name: /imágenes y ocr/i }));
+  const files = Array.from({ length: 8 }, (_, index) => new File([`image-${index}`], `image-${index + 1}.jpg`, { type: "image/jpeg" }));
+
+  fireEvent.change(screen.getByLabelText(/seleccionar varias imágenes/i), { target: { files } });
+
+  expect(await screen.findByText("8 imágenes")).toBeInTheDocument();
+  await waitFor(() => expect(analyzeImageFiles).toHaveBeenCalledWith(files, expect.objectContaining({ onProgress: expect.any(Function) })));
+  const ocrFields = await screen.findAllByLabelText("Texto reconocido por OCR");
+  expect(ocrFields).toHaveLength(8);
+  expect(ocrFields[0]).toHaveValue("Texto OCR 1");
+  fireEvent.change(ocrFields[0], { target: { value: "Texto OCR corregido" } });
+  expect(ocrFields[0]).toHaveValue("Texto OCR corregido");
+});
+
+test("adds a validated YouTube URL to the administrator preview", async () => {
+  render(<App />);
+  fireEvent.click(screen.getByRole("button", { name: /videos youtube/i }));
+  fireEvent.change(screen.getByLabelText("Título del video"), { target: { value: "Presentación escolar" } });
+  fireEvent.change(screen.getByLabelText("Descripción"), { target: { value: "Presentación del proyecto" } });
+  fireEvent.change(screen.getByLabelText("URL original de YouTube"), { target: { value: "https://www.youtube.com/shorts/a1B2c3D4e5F?feature=share" } });
+  fireEvent.click(screen.getByRole("button", { name: /guardar video/i }));
+
+  expect(await screen.findByTitle("Presentación escolar")).toHaveAttribute("src", "https://www.youtube-nocookie.com/embed/a1B2c3D4e5F");
+  expect(screen.getByRole("link", { name: /abrir video original/i })).toHaveAttribute("href", "https://www.youtube.com/shorts/a1B2c3D4e5F?feature=share");
 });

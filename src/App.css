@@ -215,7 +215,7 @@ button { cursor: pointer; }
 @media (max-width: 790px) {
   .sidebar { inset: auto 0 0; width: auto; height: 66px; flex-direction: row; padding: 5px 7px; border-top: 1px solid var(--line); border-right: 0; background: rgb(255 255 255 / 96%); }
   .sidebar .brand, .workspace-label, .sidebar-bottom { display: none; }
-  .main-nav { width: 100%; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .main-nav { width: 100%; grid-template-columns: repeat(9, minmax(58px, 1fr)); gap: 2px; overflow-x: auto; }
   .nav-item { min-width: 0; min-height: 55px; flex-direction: column; justify-content: center; gap: 2px; padding: 4px 1px; font-size: 8px; text-align: center; }
   .nav-icon { height: 21px; font-size: 16px; }
   .nav-count { position: absolute; margin: -29px 0 0 23px; min-width: 15px; height: 15px; font-size: 8px; }
@@ -224,6 +224,84 @@ button { cursor: pointer; }
   .mobile-brand { display: flex; align-items: center; gap: 7px; padding: 14px 20px 0; font-family: Manrope, sans-serif; font-weight: 800; }
   .mobile-brand .brand-mark { width: 28px; height: 28px; border-radius: 8px; font-size: 17px; }
   .content-area { padding: 24px 20px 95px; }
+}
+
+.editor-card select,
+.media-fields-grid select {
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 11px;
+  border: 1px solid #dedfd3;
+  border-radius: 9px;
+  background: #fffefa;
+  color: var(--ink);
+  font: inherit;
+}
+.image-editor-list, .video-admin-list { display: grid; gap: 16px; }
+.image-editor-card, .video-admin-card {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--paper);
+}
+.image-editor-card { display: grid; grid-template-columns: minmax(130px, 210px) minmax(0, 1fr); gap: 18px; }
+.image-editor-preview, .image-editor-placeholder {
+  width: 100%;
+  max-height: 210px;
+  aspect-ratio: 4 / 3;
+  border-radius: 10px;
+  background: #eff1df;
+  object-fit: cover;
+}
+.image-editor-placeholder { display: grid; place-items: center; color: #777e74; }
+.image-editor-fields { min-width: 0; }
+.image-editor-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.image-editor-heading strong { color: #87652e; font-size: 12px; }
+.image-editor-heading span { overflow-wrap: anywhere; color: var(--muted); font-size: 11px; }
+.media-fields-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 14px; }
+.media-fields-grid label { min-width: 0; }
+.image-editor-fields label { min-width: 0; }
+.image-editor-fields textarea { min-height: 76px; }
+.image-editor-fields .toggle-label { align-self: center; }
+.ocr-summary { display: grid; gap: 6px; align-content: start; padding: 12px; border-radius: 9px; background: #f4f4e9; color: #526647; font-size: 11px; }
+.ocr-summary small { color: #777e74; line-height: 1.6; }
+.image-editor-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.image-editor-actions .remove-button { width: auto; padding: 0 10px; font-size: 12px; }
+.field-error { color: #984b43; font-size: 12px; }
+.video-admin-card { display: grid; gap: 10px; }
+.video-admin-card > label { display: grid; gap: 7px; color: #4e5e50; font-size: 12px; font-weight: 700; }
+.video-admin-card > label input, .video-admin-card > label textarea { width: 100%; min-height: 44px; padding: 9px 11px; border: 1px solid #dedfd3; border-radius: 9px; background: #fffefa; color: var(--ink); font: inherit; }
+.youtube-player { min-width: 0; }
+.youtube-player h3 { margin: 0 0 8px; color: #294536; font: 700 18px Georgia, 'Times New Roman', serif; }
+.youtube-player p { color: #657365; font-size: 13px; line-height: 1.65; }
+.youtube-frame { position: relative; overflow: hidden; width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; background: #111; }
+.youtube-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.youtube-loading, .youtube-error { position: absolute; inset: 0; display: grid; place-items: center; padding: 15px; color: #fff !important; text-align: center; }
+.youtube-player > a { display: inline-block; margin-top: 9px; color: #526c43; font-size: 12px; }
+.video-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 18px; }
+.video-grid > div > small { display: block; margin-top: 8px; color: #777e74; }
+.image-lightbox { position: fixed; z-index: 20; inset: 0; display: grid; grid-template-columns: 52px minmax(0, 1fr) 52px; grid-template-rows: 1fr auto; align-items: center; gap: 8px; padding: clamp(16px, 4vw, 48px); background: rgb(16 24 32 / 95%); color: #fff; }
+.image-lightbox figure { grid-column: 2; grid-row: 1 / span 2; display: grid; justify-items: center; gap: 12px; margin: 0; }
+.image-lightbox figure img { max-width: 100%; max-height: 82vh; object-fit: contain; }
+.image-lightbox figcaption { color: #fff; text-align: center; }
+.image-lightbox button { display: grid; width: 44px; height: 44px; place-items: center; border: 0; border-radius: 50%; background: #ffffffdf; color: #243d35; font-size: 28px; }
+.lightbox-close { position: absolute; top: 16px; right: 16px; }
+.lightbox-previous { grid-column: 1; grid-row: 1 / span 2; }
+.lightbox-next { grid-column: 3; grid-row: 1 / span 2; }
+.infographic-cover .gallery-image-button { display: block; width: 100%; padding: 0; border: 0; background: transparent; cursor: zoom-in; }
+.infographic-cover img { display: block; }
+.infographic-gallery .gallery-image-button { display: block; width: 100%; padding: 0; border: 0; border-radius: 12px; background: transparent; cursor: zoom-in; }
+.infographic-gallery .gallery-image-button img { display: block; width: 100%; }
+.infographic-gallery figure strong, .infographic-gallery figure small { display: block; margin-top: 6px; color: #647064; font-size: 11px; }
+.infographic-videos .video-grid { margin-top: 14px; }
+
+@media (max-width: 600px) {
+  .image-editor-card { grid-template-columns: 1fr; }
+  .image-editor-preview, .image-editor-placeholder { max-height: 260px; }
+  .media-fields-grid { grid-template-columns: 1fr; }
+  .image-lightbox { grid-template-columns: 38px minmax(0, 1fr) 38px; gap: 4px; padding: 14px; }
+  .image-lightbox button { width: 36px; height: 36px; font-size: 22px; }
 }
 @media (max-width: 600px) {
   .topbar-right { gap: 8px; }

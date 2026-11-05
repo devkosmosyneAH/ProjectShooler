@@ -1,3 +1,5 @@
+import { isValidGitHubRawBaseUrl, parseYouTubeUrl } from './multimedia';
+
 export const MAX_PDF_SIZE = 50 * 1024 * 1024;
 export const SECTION_DEFINITIONS = [
   { id: 'introduction', title: 'Introducción', headings: ['introduccion', 'introducción'] },
@@ -52,6 +54,8 @@ export function createEmptyProject() {
     recommendations: [],
     references: [],
     media: [],
+    videos: [],
+    resourceConfig: { mode: 'local', rawBaseUrl: '' },
     originalDocument: null,
     updatedAt: new Date().toISOString(),
     extraction: {
@@ -190,8 +194,54 @@ export function validateProject(project) {
   if (validTables.some((table) => table.rows.some((row) => row.some((cell) => typeof cell !== 'string')))) {
     errors.push('Las celdas de las tablas deben contener texto.');
   }
-  if (Array.isArray(project.media) && project.media.some((media) => !media || typeof media.name !== 'string' || typeof media.alt !== 'string' || typeof media.path !== 'string' || !media.path.startsWith('images/proyecto/') || media.path.includes('..'))) {
-    errors.push('Cada recurso debe tener nombre, texto alternativo y una ruta local segura.');
+  if (Array.isArray(project.media) && project.media.some((media) => {
+    if (!media || typeof media.name !== 'string' || typeof media.alt !== 'string' || typeof media.path !== 'string' || media.path.includes('..')) return true;
+    if (media.source !== undefined && !['local', 'github-raw'].includes(media.source)) return true;
+    if (['title', 'description', 'visualDescription', 'ocrText'].some((key) => media[key] !== undefined && typeof media[key] !== 'string')) return true;
+    if (media.order !== undefined && (!Number.isInteger(media.order) || media.order < 1)) return true;
+    if (media.featured !== undefined && typeof media.featured !== 'boolean') return true;
+    if (media.ocrConfidence !== undefined && media.ocrConfidence !== null && (typeof media.ocrConfidence !== 'number' || media.ocrConfidence < 0 || media.ocrConfidence > 100)) return true;
+    if (media.section && (!Array.isArray(project.sections) || !project.sections.some((section) => section.id === media.section))) return true;
+    if (media.source === 'github-raw') {
+      return !isValidGitHubRawBaseUrl(project.resourceConfig?.rawBaseUrl)
+        || !/^[A-Za-z0-9._/-]+$/.test(media.path)
+        || media.path.startsWith('/')
+        || media.path.includes('\\')
+        || media.path.split('/').some((part) => part === '.' || part === '..')
+        || !/\.(?:jpe?g|png|webp)$/i.test(media.path);
+    }
+    return !/^[A-Za-z0-9._/-]+$/.test(media.path)
+      || !['images/proyecto/', 'documents/images/proyecto/'].some((prefix) => media.path.startsWith(prefix))
+      || !/\.(?:jpe?g|png|webp)$/i.test(media.path);
+  })) {
+    errors.push('Cada imagen debe tener metadatos y una ruta local segura o una ruta relativa a GitHub Raw configurado.');
+  }
+  if (project.videos !== undefined && (!Array.isArray(project.videos) || project.videos.some((video) => {
+    const parsed = parseYouTubeUrl(video?.url);
+    return !video
+      || typeof video.id !== 'string'
+      || typeof video.title !== 'string'
+      || typeof video.description !== 'string'
+      || !video.title.trim()
+      || video.platform !== 'youtube'
+      || !parsed
+      || video.videoId !== parsed.videoId
+      || video.embedUrl !== parsed.embedUrl
+      || (video.section !== '' && (!Array.isArray(project.sections) || !project.sections.some((section) => section.id === video.section)))
+      || !Number.isInteger(video.order)
+      || video.order < 1;
+  }))) {
+    errors.push('Cada video debe tener una URL de YouTube válida y metadatos coherentes.');
+  }
+  if (project.resourceConfig !== undefined) {
+    const config = project.resourceConfig;
+    if (!config || !['local', 'github-raw'].includes(config.mode) || typeof config.rawBaseUrl !== 'string') {
+      errors.push('La configuración de recursos debe indicar un origen local o una URL de GitHub Raw.');
+    } else if (config.mode === 'github-raw' && !isValidGitHubRawBaseUrl(config.rawBaseUrl)) {
+      errors.push('Configura una URL HTTPS válida de raw.githubusercontent.com para cargar los JSON externos.');
+    } else if (config.rawBaseUrl && !isValidGitHubRawBaseUrl(config.rawBaseUrl)) {
+      errors.push('La URL de recursos externos debe pertenecer a raw.githubusercontent.com.');
+    }
   }
   if (Array.isArray(project.conclusions) && project.conclusions.some((item) => typeof item !== 'string')) errors.push('Las conclusiones deben ser texto.');
   if (Array.isArray(project.recommendations) && project.recommendations.some((item) => typeof item !== 'string')) errors.push('Las recomendaciones deben ser texto.');
@@ -224,8 +274,11 @@ export function createProjectFiles(project, { includeOriginal = false, hideEmpty
         desarrollo: 'desarrollo.json',
         conclusiones: 'conclusiones.json',
         referencias: 'referencias.json',
+        multimedia: 'multimedia.json',
       },
-      media: project.media.map(({ name, path, alt }) => ({ name, path, alt })),
+      media: project.media.map(({ preview, ...image }) => image),
+      videos: project.videos || [],
+      resourceConfig: project.resourceConfig || { mode: 'local', rawBaseUrl: '' },
       originalDocument: includeOriginal && project.extraction.sourceFileName
         ? { path: `documents/${safeFileName(project.extraction.sourceFileName)}` }
         : null,
@@ -237,6 +290,11 @@ export function createProjectFiles(project, { includeOriginal = false, hideEmpty
     'desarrollo.json': { sections: project.sections, tables: project.tables, recommendations: project.recommendations },
     'conclusiones.json': { items: project.conclusions },
     'referencias.json': { items: project.references },
+    'multimedia.json': {
+      images: project.media.map(({ preview, ...image }) => image),
+      videos: project.videos || [],
+      resourceConfig: project.resourceConfig || { mode: 'local', rawBaseUrl: '' },
+    },
   };
   return Object.fromEntries(
     Object.entries(files).map(([name, value]) => [name, `${JSON.stringify(value, null, 2)}\n`]),

@@ -3,11 +3,15 @@ import './App.css';
 import { MAX_PDF_SIZE, createEmptyProject, extractProjectFromText, validateProject, buildPagesUrl } from './utils/projectData';
 import { DEVELOPER_PROFILE } from './utils/developerProfile';
 import { ActionButton, Icon, Surface } from './components/Primitives';
+import YouTubePlayer from './components/YouTubePlayer';
+import { analyzeImageFiles, isValidGitHubRawBaseUrl, normalizeGitHubRawBaseUrl, parseYouTubeUrl, resolveRawResourceUrl, validateImageFiles } from './utils/multimedia';
 
 const navigation = [
   { id: 'home', label: 'Inicio' },
   { id: 'import', label: 'Importar PDF' },
   { id: 'editor', label: 'Editor de información' },
+  { id: 'images', label: 'Imágenes y OCR' },
+  { id: 'videos', label: 'Videos YouTube' },
   { id: 'preview', label: 'Vista previa' },
   { id: 'export', label: 'Exportar archivos' },
   { id: 'qr', label: 'Generador QR' },
@@ -148,6 +152,7 @@ function PublicClientView({ hash }) {
 
   const mediaSrc = (media) => {
     if (media.preview) return media.preview;
+    if (media.source === 'github-raw') return resolveRawResourceUrl(view.project.resourceConfig?.rawBaseUrl, media.path);
     const path = media.path.replace(/^\/+/, '').replace(/^documents\//, '');
     return new URL(path.split('/').map(encodeURIComponent).join('/'), publicDocumentUrl(view.file)).href;
   };
@@ -171,13 +176,15 @@ function PageHeader({ eyebrow, title, description }) {
 }
 
 function PublicPreview({ project, hideEmpty = true, mediaSrc = (media) => media.preview || media.path }) {
+  const [lightboxIndex, setLightboxIndex] = useState(null);
+  const lightboxRef = useRef(null);
   const visibleSections = project.sections.filter((section) => !hideEmpty || section.content.trim());
   const specificObjectives = project.objectives.specific.filter(Boolean);
   const conclusions = project.conclusions.filter(Boolean);
   const recommendations = project.recommendations.filter(Boolean);
   const references = project.references.filter(Boolean);
   const hasGoals = project.objectives.general || specificObjectives.length;
-  const hasContent = project.description || project.summary || hasGoals || visibleSections.length || project.tables.length || conclusions.length || recommendations.length || references.length || project.media.length;
+  const hasContent = project.description || project.summary || hasGoals || visibleSections.length || project.tables.length || conclusions.length || recommendations.length || references.length || project.media.length || (project.videos || []).length;
   const chapters = [
     ...(project.summary ? [{ id: 'project-summary', label: 'Resumen', title: 'El proyecto en breve', content: project.summary }] : []),
     ...(hasGoals ? [{
@@ -195,8 +202,13 @@ function PublicPreview({ project, hideEmpty = true, mediaSrc = (media) => media.
       content: section.content || 'Contenido pendiente de revisión.',
     })),
   ];
-  const firstMedia = project.media[0];
-  const remainingMedia = project.media.slice(firstMedia ? 1 : 0);
+  const images = [...project.media].sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)) || (a.order || 0) - (b.order || 0));
+  const firstMedia = images[0];
+  const remainingMedia = images.slice(firstMedia ? 1 : 0);
+  const videos = [...(project.videos || [])].sort((a, b) => a.order - b.order);
+  useEffect(() => {
+    if (lightboxIndex !== null) lightboxRef.current?.focus();
+  }, [lightboxIndex]);
   const pageLinks = [
     ...chapters.map(({ id, label }) => ({ id, label })),
     ...(project.tables.length ? [{ id: 'project-tables', label: 'Tablas' }] : []),
@@ -204,6 +216,7 @@ function PublicPreview({ project, hideEmpty = true, mediaSrc = (media) => media.
     ...(recommendations.length ? [{ id: 'project-recommendations', label: 'Recomendaciones' }] : []),
     ...(references.length ? [{ id: 'project-references', label: 'Referencias' }] : []),
     ...(remainingMedia.length ? [{ id: 'project-gallery', label: 'Galería' }] : []),
+    ...(videos.length ? [{ id: 'project-videos', label: 'Videos' }] : []),
   ];
   return (
     <div className="public-preview project-infographic">
@@ -218,8 +231,10 @@ function PublicPreview({ project, hideEmpty = true, mediaSrc = (media) => media.
         </div>
         {firstMedia ? (
           <figure className="infographic-cover">
-            <img src={mediaSrc(firstMedia)} alt={firstMedia.alt || firstMedia.name} />
-            {(firstMedia.alt || firstMedia.name) && <figcaption>{firstMedia.alt || firstMedia.name}</figcaption>}
+            <button type="button" className="gallery-image-button" aria-label={`Ampliar ${firstMedia.title || firstMedia.alt || firstMedia.name}`} onClick={() => setLightboxIndex(0)}>
+              <img src={mediaSrc(firstMedia)} alt={firstMedia.alt || firstMedia.title || firstMedia.name} />
+            </button>
+            {(firstMedia.title || firstMedia.description || firstMedia.alt || firstMedia.name) && <figcaption>{firstMedia.title || firstMedia.description || firstMedia.alt || firstMedia.name}</figcaption>}
           </figure>
         ) : (
           <div className="infographic-art" aria-hidden="true"><span /><span /><span /></div>
@@ -247,9 +262,29 @@ function PublicPreview({ project, hideEmpty = true, mediaSrc = (media) => media.
         </section>}
         {references.length > 0 && <section className="infographic-data-card infographic-references" id="project-references"><p className="chapter-kicker">Fuentes consultadas</p><h2>Referencias</h2><ol>{references.map((item, index) => <li key={index}>{item}</li>)}</ol></section>}
         {remainingMedia.length > 0 && <section className="infographic-gallery infographic-data-card" id="project-gallery"><p className="chapter-kicker">Material visual</p><h2>Galería del proyecto</h2><div className="image-grid">
-          {remainingMedia.map((image) => <figure key={image.path}><img src={mediaSrc(image)} alt={image.alt || image.name} loading="lazy" /><figcaption>{image.alt || image.name}</figcaption></figure>)}
+          {remainingMedia.map((image, index) => <figure key={image.id || image.path}>
+            <button type="button" className="gallery-image-button" aria-label={`Ampliar ${image.title || image.alt || image.name}`} onClick={() => setLightboxIndex(index + (firstMedia ? 1 : 0))}>
+              <img src={mediaSrc(image)} alt={image.alt || image.title || image.name} loading="lazy" decoding="async" />
+            </button>
+            {image.title && <strong>{image.title}</strong>}
+            {(image.description || image.alt) && <figcaption>{image.description || image.alt}</figcaption>}
+            {image.section && <small>Sección: {project.sections.find((section) => section.id === image.section)?.title || image.section}</small>}
+          </figure>)}
+        </div></section>}
+        {videos.length > 0 && <section className="infographic-data-card infographic-videos" id="project-videos"><p className="chapter-kicker">Material audiovisual</p><h2>Videos del proyecto</h2><div className="video-grid">
+          {videos.map((video) => <div key={video.id}><YouTubePlayer video={video} />{video.section && <small>Sección: {project.sections.find((section) => section.id === video.section)?.title || video.section}</small>}</div>)}
         </div></section>}
       </div>
+      {lightboxIndex !== null && images[lightboxIndex] && <div ref={lightboxRef} className="image-lightbox" role="dialog" aria-modal="true" aria-label="Vista ampliada de la galería" tabIndex={-1} onKeyDown={(event) => {
+        if (event.key === 'Escape') setLightboxIndex(null);
+        if (event.key === 'ArrowLeft') setLightboxIndex((index) => (index - 1 + images.length) % images.length);
+        if (event.key === 'ArrowRight') setLightboxIndex((index) => (index + 1) % images.length);
+      }} onClick={(event) => { if (event.target === event.currentTarget) setLightboxIndex(null); }}>
+        <button type="button" className="lightbox-close" onClick={() => setLightboxIndex(null)} aria-label="Cerrar imagen ampliada">×</button>
+        <button type="button" className="lightbox-previous" onClick={() => setLightboxIndex((index) => (index - 1 + images.length) % images.length)} aria-label="Imagen anterior">‹</button>
+        <figure><img src={mediaSrc(images[lightboxIndex])} alt={images[lightboxIndex].alt || images[lightboxIndex].title || images[lightboxIndex].name} /><figcaption>{images[lightboxIndex].title || images[lightboxIndex].description || images[lightboxIndex].alt || images[lightboxIndex].name}</figcaption></figure>
+        <button type="button" className="lightbox-next" onClick={() => setLightboxIndex((index) => (index + 1) % images.length)} aria-label="Imagen siguiente">›</button>
+      </div>}
       <footer className="developer-credit">
         <div className="developer-credit-inner">
           <div>
@@ -277,6 +312,8 @@ function App() {
   const [progress, setProgress] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [processingCancelled, setProcessingCancelled] = useState(false);
+  const [imageProcessing, setImageProcessing] = useState(false);
+  const [imageProgress, setImageProgress] = useState(null);
   const [error, setError] = useState('');
   const [approved, setApproved] = useState(false);
   const [includeOriginal, setIncludeOriginal] = useState(false);
@@ -287,6 +324,7 @@ function App() {
   const [qrImage, setQrImage] = useState('');
   const [copied, setCopied] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [videoDraft, setVideoDraft] = useState({ title: '', description: '', url: '', section: '', order: '' });
   const cancelRef = useRef(false);
   const inputRef = useRef(null);
   const imageInputRef = useRef(null);
@@ -376,19 +414,62 @@ function App() {
 
   const handleImageFiles = async (event) => {
     const files = Array.from(event.target.files || []);
-    const validFiles = files.filter((file) => file.type.startsWith('image/') && file.size <= 10 * 1024 * 1024);
-    if (validFiles.length !== files.length) setError('Solo se aceptan imágenes de hasta 10 MB cada una.');
+    const validationMessages = validateImageFiles(files);
+    const validFiles = files.filter((file) => !validateImageFiles([file]).length);
+    if (validationMessages.length) setError(validationMessages.join(' '));
+    if (!validFiles.length) {
+      event.target.value = '';
+      return;
+    }
     try {
+      const timestamp = Date.now();
       const additions = await Promise.all(validFiles.map(async (file, index) => {
-        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '-').replace(/\.+/g, '-');
-        const path = `images/proyecto/${Date.now()}-${index}-${safeName}`;
-        return { path, file, preview: await fileAsDataUrl(file) };
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '-').replace(/^\.+/, '-');
+        const path = `images/proyecto/${timestamp}-${index + 1}-${safeName}`;
+        return {
+          path,
+          file,
+          image: {
+            id: `image-${timestamp}-${index + 1}`,
+            title: file.name,
+            description: '',
+            visualDescription: '',
+            name: file.name,
+            alt: '',
+            path,
+            source: 'local',
+            section: '',
+            order: project.media.length + index + 1,
+            featured: false,
+            ocrText: '',
+            ocrConfidence: null,
+            ocrReviewRequired: true,
+            ocrClassification: { titles: [], paragraphs: [], dates: [], data: [] },
+            visualReviewRequired: true,
+          },
+          preview: await fileAsDataUrl(file),
+        };
       }));
       setImageFiles((current) => Object.fromEntries([...Object.entries(current), ...additions.map(({ path, file }) => [path, file])]));
       updateProject((current) => ({
         ...current,
-        media: [...current.media, ...additions.map(({ path, file, preview }) => ({ path, name: file.name, alt: '', preview }))],
+        media: [...current.media, ...additions.map(({ image, preview }) => ({ ...image, preview }))],
       }));
+      setImageProcessing(true);
+      setImageProgress({ current: 0, total: additions.length });
+      try {
+        const analysis = await analyzeImageFiles(validFiles, { onProgress: setImageProgress });
+        const results = new Map(additions.map(({ image }, index) => [image.id, analysis[index]]));
+        updateProject((current) => ({
+          ...current,
+          media: current.media.map((image) => results.has(image.id) ? { ...image, ...results.get(image.id) } : image),
+        }));
+      } catch (ocrError) {
+        setError(`Las imágenes se añadieron, pero el OCR no se completó: ${ocrError.message}`);
+      } finally {
+        setImageProcessing(false);
+        setImageProgress(null);
+      }
     } catch (imageError) {
       setError(imageError.message);
     } finally {
@@ -408,7 +489,7 @@ function App() {
   const exportJson = () => {
     if (!approved || validationErrors.length) return;
     import('./utils/siteBundle')
-      .then(({ createJsonZip }) => createJsonZip(project, { hideEmptySections: hideEmpty }))
+      .then(({ createJsonZip }) => createJsonZip(project, imageFiles, { hideEmptySections: hideEmpty }))
       .then((zip) => downloadBlob(zip, `${project.projectId}-datos-json.zip`))
       .catch((zipError) => setError(`No se pudieron exportar los JSON: ${zipError.message}`));
   };
@@ -452,6 +533,35 @@ function App() {
     } catch (qrError) {
       setError(qrError.message);
     }
+  };
+
+  const addVideo = () => {
+    const parsed = parseYouTubeUrl(videoDraft.url);
+    if (!videoDraft.title.trim()) {
+      setError('Escribe un título para el video.');
+      return;
+    }
+    if (!parsed) {
+      setError('La URL no es un enlace HTTPS válido de YouTube.');
+      return;
+    }
+    const order = Number.parseInt(videoDraft.order, 10) || project.videos.length + 1;
+    updateProject((current) => ({
+      ...current,
+      videos: [...current.videos, {
+        id: `video-${Date.now()}`,
+        title: videoDraft.title.trim(),
+        description: videoDraft.description.trim(),
+        platform: 'youtube',
+        url: parsed.url,
+        videoId: parsed.videoId,
+        embedUrl: parsed.embedUrl,
+        section: videoDraft.section,
+        order: Math.max(1, order),
+      }].sort((a, b) => a.order - b.order),
+    }));
+    setVideoDraft({ title: '', description: '', url: '', section: '', order: '' });
+    setError('');
   };
 
   const renderHome = () => (
@@ -555,6 +665,139 @@ function App() {
     </>
   );
 
+  const updateImage = (imageKey, changes) => updateProject((current) => ({
+    ...current,
+    media: current.media.map((image) => (image.id || image.path) === imageKey ? { ...image, ...changes } : image),
+  }));
+
+  const moveImage = (imageKey, offset) => updateProject((current) => {
+    const images = current.media.slice().sort((a, b) => (a.order || 0) - (b.order || 0));
+    const index = images.findIndex((image) => (image.id || image.path) === imageKey);
+    const target = index + offset;
+    if (index < 0 || target < 0 || target >= images.length) return current;
+    [images[index], images[target]] = [images[target], images[index]];
+    return { ...current, media: images.map((image, imageIndex) => ({ ...image, order: imageIndex + 1 })) };
+  });
+
+  const renderImages = () => (
+    <>
+      <PageHeader eyebrow="Imágenes del proyecto" title="Importa y revisa tus imágenes" description="Carga varias imágenes a la vez. Tesseract reconoce texto; las descripciones visuales requieren revisión y edición humana." />
+      <section
+        className={`drop-zone image-drop-zone ${dragging ? 'is-dragging' : ''}`}
+        onDragOver={(event) => { event.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={(event) => { event.preventDefault(); setDragging(false); handleImageFiles({ target: { files: event.dataTransfer.files, value: '' } }); }}
+      >
+        <input ref={imageInputRef} className="visually-hidden" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" multiple aria-label="Seleccionar varias imágenes" onChange={handleImageFiles} />
+        <span className="upload-icon">▧</span>
+        <h2>Arrastra aquí tus imágenes</h2>
+        <p>Selecciona una o varias fotografías para analizarlas en este dispositivo.</p>
+        <ActionButton loading={imageProcessing} onClick={() => imageInputRef.current?.click()}>{imageProcessing ? 'Analizando…' : 'Elegir imágenes'}</ActionButton>
+        <small>JPG, PNG o WEBP · hasta 10 MB por imagen</small>
+      </section>
+      {imageProcessing && <section className="progress-card" role="status"><div className="progress-top"><strong>Reconociendo texto con Tesseract.js…</strong><span>{imageProgress?.current || 0} de {imageProgress?.total || project.media.length}</span></div><div className="progress-track"><div style={{ width: imageProgress?.total ? `${Math.max(3, ((imageProgress.current || 0) / imageProgress.total) * 100)}%` : '4%' }} /></div><div className="progress-bottom"><span>Solo OCR; no se realiza reconocimiento visual de diagramas o gráficos.</span></div></section>}
+      <section className="editor-card">
+        <div className="editor-card-heading"><div><p className="eyebrow">Origen de publicación</p><h2>GitHub Pages o GitHub Raw</h2></div></div>
+        <label>Origen de los archivos JSON
+          <select value={project.resourceConfig?.mode || 'local'} onChange={(event) => updateProject((current) => ({ ...current, resourceConfig: { ...(current.resourceConfig || {}), mode: event.target.value } }))}>
+            <option value="local">Local · incluido en GitHub Pages</option>
+            <option value="github-raw">GitHub Raw · JSON desde repositorio público</option>
+          </select>
+        </label>
+        <label>URL base de GitHub Raw
+          <input value={project.resourceConfig?.rawBaseUrl || ''} onChange={(event) => updateProject((current) => ({ ...current, resourceConfig: { ...(current.resourceConfig || {}), rawBaseUrl: event.target.value } }))} onBlur={() => {
+            const rawBaseUrl = project.resourceConfig?.rawBaseUrl || '';
+            if (isValidGitHubRawBaseUrl(rawBaseUrl)) updateProject((current) => ({ ...current, resourceConfig: { ...current.resourceConfig, rawBaseUrl: normalizeGitHubRawBaseUrl(rawBaseUrl) } }));
+          }} placeholder="https://raw.githubusercontent.com/usuario/repositorio/main/public/" autoComplete="url" />
+          <small>Usa una URL pública que apunte a la carpeta que contiene data/ e images/. Requiere HTTPS y raw.githubusercontent.com.</small>
+        </label>
+        <Notice tone={project.resourceConfig?.mode === 'github-raw' && !isValidGitHubRawBaseUrl(project.resourceConfig?.rawBaseUrl) ? 'warning' : 'info'}>
+          {project.resourceConfig?.mode === 'github-raw'
+            ? 'El sitio descargará el JSON desde la URL configurada. La carpeta public/ no se agrega dos veces a la URL.'
+            : 'El origen local es el predeterminado: las rutas relativas funcionan dentro de subdirectorios de GitHub Pages.'}
+        </Notice>
+      </section>
+      <section className="editor-card">
+        <div className="editor-card-heading"><div><p className="eyebrow">Galería y OCR</p><h2>{project.media.length} imágenes</h2></div></div>
+        {project.media.length === 0 && <p className="empty-state">Aún no has añadido imágenes.</p>}
+        <div className="image-editor-list">
+          {project.media.slice().sort((a, b) => (a.order || 0) - (b.order || 0)).map((image, index) => {
+            const imageKey = image.id || image.path;
+            const preview = image.preview || (image.source === 'github-raw' && isValidGitHubRawBaseUrl(project.resourceConfig?.rawBaseUrl) ? resolveRawResourceUrl(project.resourceConfig.rawBaseUrl, image.path) : '');
+            return <article className="image-editor-card" key={imageKey}>
+              {preview ? <img className="image-editor-preview" src={preview} alt={image.alt || image.title || image.name} loading="lazy" /> : <div className="image-editor-placeholder" aria-hidden="true">IMG</div>}
+              <div className="image-editor-fields">
+                <div className="image-editor-heading"><strong>{image.ocrReviewRequired ? 'OCR pendiente de revisión' : 'OCR listo para revisar'} · revisión visual pendiente</strong><span>{image.name}</span></div>
+                <div className="media-fields-grid">
+                  <label>Título<input value={image.title || ''} onChange={(event) => updateImage(imageKey, { title: event.target.value })} /></label>
+                  <label>Texto alternativo<input value={image.alt || ''} onChange={(event) => updateImage(imageKey, { alt: event.target.value })} placeholder="Describe la imagen para accesibilidad" /></label>
+                  <label>Descripción visual revisada por el usuario<textarea rows="2" value={image.visualDescription || ''} onChange={(event) => updateImage(imageKey, { visualDescription: event.target.value, description: event.target.value })} placeholder="Añade solo una descripción que hayas comprobado visualmente" /></label>
+                  <label>Descripción publicada<textarea rows="2" value={image.description || ''} onChange={(event) => updateImage(imageKey, { description: event.target.value })} placeholder="Descripción revisada" /></label>
+                  <label>Texto reconocido por OCR<textarea rows="4" value={image.ocrText || ''} onChange={(event) => updateImage(imageKey, { ocrText: event.target.value, ocrReviewRequired: !event.target.value.trim() || (image.ocrConfidence ?? 0) < 75 })} placeholder="El texto OCR aparecerá aquí; edítalo tras revisarlo" /></label>
+                  <div className="ocr-summary"><strong>Resultado OCR</strong><span>{image.ocrConfidence === null || image.ocrConfidence === undefined ? 'Sin confianza disponible' : `Confianza: ${Math.round(image.ocrConfidence)}%`}</span>
+                    {Object.entries(image.ocrClassification || {}).map(([category, lines]) => lines?.length > 0 && <small key={category}><b>{({ titles: 'Posibles títulos', paragraphs: 'Párrafos', dates: 'Fechas', data: 'Líneas con datos o números' })[category] || category}:</b> {lines.join(' · ')}</small>)}
+                    <small>La clasificación de líneas usa únicamente el texto OCR. Diagramas, gráficos y otros elementos visuales quedan pendientes de revisión manual.</small>
+                  </div>
+                  <label>Sección asociada<select value={image.section || ''} onChange={(event) => updateImage(imageKey, { section: event.target.value })}><option value="">Sin sección</option>{project.sections.map((section) => <option key={section.id} value={section.id}>{section.title}</option>)}</select></label>
+                  <label>Orden<input type="number" min="1" value={image.order || index + 1} onChange={(event) => updateImage(imageKey, { order: Math.max(1, Number(event.target.value) || 1) })} /></label>
+                  <label className="toggle-label"><input type="checkbox" checked={Boolean(image.featured)} onChange={(event) => updateImage(imageKey, { featured: event.target.checked })} /> Destacar imagen</label>
+                  <label>Origen de la imagen<select value={image.source || 'local'} onChange={(event) => updateImage(imageKey, { source: event.target.value })}><option value="local">Local · agregar al ZIP</option><option value="github-raw">GitHub Raw · ruta relativa a la URL base</option></select></label>
+                  {image.source === 'github-raw' && <label>Ruta relativa en GitHub Raw<input value={image.path} onChange={(event) => updateImage(imageKey, { path: event.target.value })} placeholder="images/proyecto/imagen.jpg" /></label>}
+                </div>
+                <div className="image-editor-actions">
+                  <button className="button button-quiet" disabled={index === 0} onClick={() => moveImage(imageKey, -1)}>Subir</button>
+                  <button className="button button-quiet" disabled={index === project.media.length - 1} onClick={() => moveImage(imageKey, 1)}>Bajar</button>
+                  <button className="icon-button remove-button" aria-label={`Eliminar imagen ${image.title || image.name}`} onClick={() => removeImage(image.path)}>×</button>
+                </div>
+              </div>
+            </article>;
+          })}
+        </div>
+      </section>
+      {error && <Notice tone="danger">{error}</Notice>}
+    </>
+  );
+
+  const renderVideos = () => (
+    <>
+      <PageHeader eyebrow="Videos del proyecto" title="Administra videos de YouTube" description="Agrega enlaces HTTPS de YouTube. El identificador y la URL de privacidad mejorada se validan antes de guardar." />
+      <section className="editor-card">
+        <div className="editor-card-heading"><div><p className="eyebrow">Nuevo video</p><h2>Agregar video</h2></div></div>
+        <label>Título del video<input value={videoDraft.title} onChange={(event) => setVideoDraft((draft) => ({ ...draft, title: event.target.value }))} placeholder="Título que se mostrará en la página" /></label>
+        <label>Descripción<textarea rows="3" value={videoDraft.description} onChange={(event) => setVideoDraft((draft) => ({ ...draft, description: event.target.value }))} placeholder="Descripción opcional" /></label>
+        <label>URL original de YouTube<input value={videoDraft.url} onChange={(event) => setVideoDraft((draft) => ({ ...draft, url: event.target.value }))} placeholder="https://www.youtube.com/watch?v=…" inputMode="url" /></label>
+        {videoDraft.url && !parseYouTubeUrl(videoDraft.url) && <p className="field-error" role="alert">La URL debe ser un enlace HTTPS válido de youtube.com o youtu.be.</p>}
+        <div className="media-fields-grid">
+          <label>Sección relacionada<select value={videoDraft.section} onChange={(event) => setVideoDraft((draft) => ({ ...draft, section: event.target.value }))}><option value="">Sin sección</option>{project.sections.map((section) => <option key={section.id} value={section.id}>{section.title}</option>)}</select></label>
+          <label>Orden<input type="number" min="1" value={videoDraft.order} onChange={(event) => setVideoDraft((draft) => ({ ...draft, order: event.target.value }))} placeholder={String(project.videos.length + 1)} /></label>
+        </div>
+        <button className="button button-primary" onClick={addVideo}>＋ Guardar video</button>
+      </section>
+      <section className="editor-card">
+        <div className="editor-card-heading"><div><p className="eyebrow">Vista previa y metadatos</p><h2>{project.videos.length} videos</h2></div></div>
+        {project.videos.length === 0 && <p className="empty-state">No hay videos. La página pública ocultará esta sección.</p>}
+        <div className="video-admin-list">{project.videos.slice().sort((a, b) => a.order - b.order).map((video) => (
+          <article className="video-admin-card" key={video.id}>
+            <YouTubePlayer video={video} />
+            <label>Título<input value={video.title} onChange={(event) => updateProject((current) => ({ ...current, videos: current.videos.map((item) => item.id === video.id ? { ...item, title: event.target.value } : item) }))} /></label>
+            <label>Descripción<textarea rows="2" value={video.description} onChange={(event) => updateProject((current) => ({ ...current, videos: current.videos.map((item) => item.id === video.id ? { ...item, description: event.target.value } : item) }))} /></label>
+            <label>URL original<input value={video.url} onChange={(event) => {
+              const parsed = parseYouTubeUrl(event.target.value);
+              updateProject((current) => ({ ...current, videos: current.videos.map((item) => item.id === video.id ? { ...item, url: event.target.value, videoId: parsed?.videoId || '', embedUrl: parsed?.embedUrl || '' } : item) }));
+            }} /></label>
+            <div className="media-fields-grid">
+              <label>Sección relacionada<select value={video.section} onChange={(event) => updateProject((current) => ({ ...current, videos: current.videos.map((item) => item.id === video.id ? { ...item, section: event.target.value } : item) }))}><option value="">Sin sección</option>{project.sections.map((section) => <option key={section.id} value={section.id}>{section.title}</option>)}</select></label>
+              <label>Orden<input type="number" min="1" value={video.order} onChange={(event) => updateProject((current) => ({ ...current, videos: current.videos.map((item) => item.id === video.id ? { ...item, order: Math.max(1, Number(event.target.value) || 1) } : item) }))} /></label>
+            </div>
+            {!parseYouTubeUrl(video.url) && <p className="field-error" role="alert">Corrige la URL del video antes de exportar.</p>}
+            <button className="icon-button remove-button" aria-label={`Eliminar video ${video.title}`} onClick={() => updateProject((current) => ({ ...current, videos: current.videos.filter((item) => item.id !== video.id) }))}>Eliminar</button>
+          </article>
+        ))}</div>
+      </section>
+      {error && <Notice tone="danger">{error}</Notice>}
+    </>
+  );
+
   const renderPreview = () => (
     <>
       <PageHeader eyebrow="Sitio público" title="Vista previa del proyecto" description="Así se organizará el contenido en el sitio público exportado." />
@@ -608,6 +851,8 @@ function App() {
     switch (activePage) {
       case 'import': return renderImport();
       case 'editor': return renderEditor();
+      case 'images': return renderImages();
+      case 'videos': return renderVideos();
       case 'preview': return renderPreview();
       case 'export': return renderExport();
       case 'qr': return renderQr();

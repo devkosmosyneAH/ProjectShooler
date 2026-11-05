@@ -60,15 +60,45 @@ describe('project extraction and JSON model', () => {
     project.authors = [{ id: 'autor-1', name: 'Ana Pérez', role: 'Estudiante' }];
     project.sections[0].content = 'Introducción del proyecto.';
     project.tables = [{ id: 'tabla-1', title: 'Resultados', rows: [['Cultivo', 'Cantidad'], ['Maíz', '12']] }];
+    project.media = [{
+      id: 'image-1',
+      title: 'Muestra del huerto',
+      description: 'Descripción revisada',
+      visualDescription: 'Descripción agregada por el usuario',
+      name: 'huerto.jpg',
+      alt: 'Fotografía del huerto',
+      path: 'images/proyecto/huerto.jpg',
+      section: 'development',
+      order: 1,
+      featured: true,
+      ocrText: 'Texto reconocido',
+      ocrConfidence: 92,
+      ocrReviewRequired: false,
+    }];
+    project.videos = [{
+      id: 'video-1',
+      title: 'Presentación del proyecto',
+      description: 'Video explicativo',
+      platform: 'youtube',
+      url: 'https://youtu.be/a1B2c3D4e5F',
+      videoId: 'a1B2c3D4e5F',
+      embedUrl: 'https://www.youtube-nocookie.com/embed/a1B2c3D4e5F',
+      section: 'introduction',
+      order: 1,
+    }];
 
     const files = createProjectFiles(project);
     const main = JSON.parse(files['proyecto.json']);
     const members = JSON.parse(files['integrantes.json']);
     const development = JSON.parse(files['desarrollo.json']);
+    const multimedia = JSON.parse(files['multimedia.json']);
     Object.values(files).forEach((contents) => expect(() => JSON.parse(contents)).not.toThrow());
     expect(main.authors).toEqual(['autor-1']);
     expect(members.integrantes[0].name).toBe('Ana Pérez');
     expect(development.tables[0].rows[1]).toEqual(['Maíz', '12']);
+    expect(multimedia.images[0].ocrText).toBe('Texto reconocido');
+    expect(multimedia.videos[0].embedUrl).toContain('youtube-nocookie.com');
+    expect(main.content.multimedia).toBe('multimedia.json');
     expect(validateProject(project)).toEqual([]);
   });
 
@@ -78,6 +108,25 @@ describe('project extraction and JSON model', () => {
     project.tables = 'not a list';
     expect(validateProject(project).length).toBeGreaterThan(0);
     expect(() => createProjectFiles(project)).toThrow();
+  });
+
+  test('rejects arbitrary video domains and invalid GitHub Raw resource origins', () => {
+    const project = createEmptyProject();
+    project.videos = [{
+      id: 'video-1',
+      title: 'Video no válido',
+      description: '',
+      platform: 'youtube',
+      url: 'https://youtube.com.evil.example/watch?v=a1B2c3D4e5F',
+      videoId: 'a1B2c3D4e5F',
+      embedUrl: 'https://www.youtube-nocookie.com/embed/a1B2c3D4e5F',
+      section: '',
+      order: 1,
+    }];
+    expect(validateProject(project)).toContain('Cada video debe tener una URL de YouTube válida y metadatos coherentes.');
+    project.videos = [];
+    project.resourceConfig = { mode: 'github-raw', rawBaseUrl: 'https://github.com/team/repo' };
+    expect(validateProject(project)).toContain('Configura una URL HTTPS válida de raw.githubusercontent.com para cargar los JSON externos.');
   });
 });
 

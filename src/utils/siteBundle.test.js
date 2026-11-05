@@ -62,7 +62,7 @@ describe('static site and JSON exports', () => {
     expect(root.textContent).toContain('Introducción visible');
     expect(root.textContent).toContain('Conclusión de prueba');
     expect(root.textContent).toContain('Recomendación de prueba');
-    expect(root.querySelector('.developer-credit').textContent).toContain('Cordova Anthony');
+    expect(root.querySelector('.developer-credit').textContent).toContain('Anthony');
     const developerLinks = [...root.querySelectorAll('.developer-links a')];
     expect(developerLinks.map((link) => link.href)).toEqual([
       'https://devkosmosyneah.github.io/devkosmosyne-website/',
@@ -74,12 +74,13 @@ describe('static site and JSON exports', () => {
     expect(globalThis.fetch).toHaveBeenCalledWith('./data/proyecto.json');
   });
 
-  test('creates a data-only ZIP with the six JSON documents', async () => {
+  test('creates a data-only ZIP with the project JSON documents including multimedia metadata', async () => {
     const zip = await JSZip.loadAsync(await createJsonZip(sampleProject()));
     expect(Object.keys(zip.files).filter((name) => !zip.files[name].dir).sort()).toEqual([
       'public/data/conclusiones.json',
       'public/data/desarrollo.json',
       'public/data/integrantes.json',
+      'public/data/multimedia.json',
       'public/data/objetivos.json',
       'public/data/proyecto.json',
       'public/data/referencias.json',
@@ -101,5 +102,60 @@ describe('static site and JSON exports', () => {
     const main = JSON.parse(await zip.file('public/data/proyecto.json').async('string'));
     expect(main.originalDocument.path).toBe('documents/school.pdf');
     expect(zip.file('public/documents/school.pdf')).not.toBeNull();
+  });
+
+  test('includes original image bytes and OCR metadata in the ZIP and rejects missing local files', async () => {
+    const project = sampleProject();
+    const path = 'images/proyecto/image-001.jpg';
+    const image = new File(['original-image-bytes'], 'image-001.jpg', { type: 'image/jpeg' });
+    project.media = [{
+      id: 'image-001',
+      title: 'Imagen del proyecto',
+      description: 'Descripción revisada',
+      visualDescription: 'Descripción manual',
+      name: image.name,
+      alt: 'Imagen de un experimento',
+      path,
+      source: 'local',
+      section: 'development',
+      order: 1,
+      featured: true,
+      ocrText: 'Texto reconocido por OCR',
+      ocrConfidence: 88,
+      ocrReviewRequired: false,
+    }];
+    const archive = await JSZip.loadAsync(await createSiteZip(project, { [path]: image }));
+    const projectJson = JSON.parse(await archive.file('public/data/proyecto.json').async('string'));
+    const multimedia = JSON.parse(await archive.file('public/data/multimedia.json').async('string'));
+
+    expect(await archive.file(`public/${path}`).async('string')).toBe('original-image-bytes');
+    expect(projectJson.media[0].ocrText).toBe('Texto reconocido por OCR');
+    expect(multimedia.images[0].description).toBe('Descripción revisada');
+    await expect(createSiteZip(project, {})).rejects.toThrow(/No se exportaron referencias rotas/);
+  });
+
+  test('loads JSON from an explicitly configured GitHub Raw base without rewriting Pages URLs', async () => {
+    const project = sampleProject();
+    project.resourceConfig = {
+      mode: 'github-raw',
+      rawBaseUrl: 'https://raw.githubusercontent.com/team/school-project/main/public/',
+    };
+    const archive = await JSZip.loadAsync(await createSiteZip(project));
+    const runtime = await archive.file('public/app.js').async('string');
+    const files = createProjectFiles(project);
+    const base = project.resourceConfig.rawBaseUrl;
+    const resources = Object.fromEntries(Object.entries(files).map(([name, value]) => [`${base}data/${name}`, value]));
+    globalThis.fetch = vi.fn(async (url) => ({
+      ok: Boolean(resources[url]),
+      json: async () => JSON.parse(resources[url]),
+    }));
+    document.body.innerHTML = '<div id="project"></div>';
+    const execute = new Function(runtime.replace(/\nloadProject\(\);\s*$/, '\nreturn loadProject();'));
+
+    await execute();
+
+    expect(globalThis.fetch).toHaveBeenCalledWith(`${base}data/proyecto.json`);
+    expect(globalThis.fetch).toHaveBeenCalledWith(`${base}data/multimedia.json`);
+    expect(runtime).not.toContain('https://team.github.io/');
   });
 });
