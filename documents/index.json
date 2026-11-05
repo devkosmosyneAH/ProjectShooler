@@ -1,10 +1,11 @@
 {
   "projects": [
     {
-      "file": "CV_Final_AC_Espan-ol.json",
-      "title": "A N T H O N Y C Ó R D O V A",
+      "file": "proyecto.json",
+      "title": "Región Litoral o Costa del Ecuador",
       "images": [
-        "images/proyecto/foto.jpg"
+        "images/proyecto/foto.jpg",
+        "images/proyecto/foto.png"
       ]
     }
   ]
