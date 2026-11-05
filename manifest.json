@@ -1,6 +1,20 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "id": "/ProjectShooler/",
+  "short_name": "Aula",
+  "name": "Aula - Proyectos Escolares",
+  "description": "Plataforma educativa para crear, organizar, importar y publicar proyectos escolares.",
+  "lang": "es",
+  "start_url": ".",
+  "scope": "/ProjectShooler/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#f6f7fb",
+  "background_color": "#f6f7fb",
+  "categories": [
+    "education",
+    "productivity",
+    "utilities"
+  ],
   "icons": [
     {
       "src": "favicon.ico",
@@ -17,9 +31,5 @@
       "type": "image/png",
       "sizes": "512x512"
     }
-  ],
-  "start_url": ".",
-  "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  ]
 }
