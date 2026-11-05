@@ -4,7 +4,7 @@ Aplicación React + Vite para extraer y revisar contenido de documentos PDF, exp
 
 ## Requisitos
 
-- Node.js compatible con Vite 7 (Node 20.19+ o 22.12+).
+- Node.js compatible con Vite 7 y Vitest 4 (Node 20.19+, 22.12–22.x o 24+).
 - npm.
 
 ## Desarrollo y pruebas
@@ -31,7 +31,7 @@ El ZIP incluye `public/index.html`, `public/app.js`, `public/styles.css`, `publi
 
 ## GitHub Pages y `base` de Vite
 
-La configuración de Vite usa `/` durante desarrollo. En GitHub Actions, `vite.config.js` obtiene el nombre del repositorio desde `GITHUB_REPOSITORY` y establece `/<repositorio>/`; para `<usuario>.github.io` usa `/`. Para otra ruta se puede definir `VITE_BASE_PATH`, por ejemplo `VITE_BASE_PATH=/mi-repositorio/ npm run build`.
+La configuración de Vite usa `/` durante desarrollo. En GitHub Actions, `vite.config.js` obtiene el nombre del repositorio desde `GITHUB_REPOSITORY` y establece `/<repositorio>/`; para `<usuario>.github.io` usa `/`. En compilaciones locales usa la ruta de `homepage` del manifiesto. Para otra ruta se puede definir `VITE_BASE_PATH`, por ejemplo `VITE_BASE_PATH=/mi-repositorio/ npm run build`. El script `npm run deploy` publica `dist/` con `gh-pages`.
 
 El ZIP generado publica el sitio estático del proyecto escolar, no el administrador React. Los archivos públicos deben extraerse en la raíz del repositorio destino. GitHub Pages no permite que el navegador escriba al repositorio ni da autenticación al panel. No guardes tokens o secretos en el frontend y no publiques datos de estudiantes sin autorización.
 
