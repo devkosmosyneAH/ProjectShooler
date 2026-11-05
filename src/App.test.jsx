@@ -116,13 +116,6 @@ test("renders only the public project at the View hash route", async () => {
   const project = createEmptyProject();
   project.projectId = "proyecto-publico";
   project.title = "Proyecto para clientes";
-  project.media = [
-    {
-      name: "foto.png",
-      path: "images/proyecto/foto.png",
-      alt: "Imagen del proyecto",
-    },
-  ];
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url) => {
@@ -131,7 +124,11 @@ test("renders only the public project at the View hash route", async () => {
           ok: true,
           json: async () => ({
             projects: [
-              { file: "nombre-personalizado.json", title: project.title },
+              {
+                file: "nombre-personalizado.json",
+                title: project.title,
+                images: ["images/proyecto/foto.png"],
+              },
             ],
           }),
         };
@@ -149,7 +146,7 @@ test("renders only the public project at the View hash route", async () => {
   expect(
     screen.queryByRole("navigation", { name: /navegación principal/i }),
   ).not.toBeInTheDocument();
-  expect(screen.getByAltText("Imagen del proyecto")).toHaveAttribute(
+  expect(screen.getByAltText("foto.png")).toHaveAttribute(
     "src",
     expect.stringContaining("/documents/images/proyecto/foto.png"),
   );

@@ -33,7 +33,7 @@ const homepageBase = (() => {
 
 function getPublicProjects() {
   if (!existsSync(documentsDirectory)) return [];
-  return readdirSync(documentsDirectory, { withFileTypes: true })
+  const projectFiles = readdirSync(documentsDirectory, { withFileTypes: true })
     .filter(
       (entry) =>
         entry.isFile() &&
@@ -44,9 +44,40 @@ function getPublicProjects() {
       const filePath = join(documentsDirectory, entry.name);
       const project = JSON.parse(readFileSync(filePath, "utf8"));
       return typeof project.projectId === "string"
-        ? [{ file: entry.name, title: project.title || "Proyecto escolar" }]
+        ? [
+            {
+              file: entry.name,
+              projectId: project.projectId,
+              title: project.title || "Proyecto escolar",
+            },
+          ]
         : [];
     });
+  const imageDirectory = join(documentsDirectory, "images/proyecto");
+  const imageFiles = [];
+  const collectImages = (directory, prefix = "") => {
+    if (!existsSync(directory)) return;
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      if (entry.name.startsWith(".")) continue;
+      const path = prefix ? `${prefix}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) collectImages(join(directory, entry.name), path);
+      else if (/\.(?:png|jpe?g|gif|webp|svg)$/i.test(entry.name))
+        imageFiles.push(path);
+    }
+  };
+  collectImages(imageDirectory);
+
+  return projectFiles.map((project) => ({
+    file: project.file,
+    title: project.title,
+    images: imageFiles
+      .filter(
+        (image) =>
+          image.startsWith(`${project.projectId}/`) ||
+          (projectFiles.length === 1 && !image.includes("/")),
+      )
+      .map((image) => `images/proyecto/${image}`),
+  }));
 }
 
 function publicDocumentsPlugin() {

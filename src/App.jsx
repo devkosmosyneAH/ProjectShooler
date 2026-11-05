@@ -87,6 +87,12 @@ function PublicClientView({ hash }) {
         const projectResponse = await fetch(publicDocumentUrl(selected.file));
         if (!projectResponse.ok) throw new Error(`No se pudo cargar ${selected.file}.`);
         const project = await projectResponse.json();
+        if ((!Array.isArray(project.media) || project.media.length === 0) && selected.images?.length) {
+          project.media = selected.images.map((path) => {
+            const name = path.split('/').pop();
+            return { name, path, alt: name };
+          });
+        }
         const validationErrors = validateProject(project);
         if (validationErrors.length) throw new Error(`El archivo ${selected.file} no contiene un proyecto válido: ${validationErrors.join(' ')}`);
         if (active) setView({ loading: false, project, file: selected.file, projects, error: '' });
