@@ -44,6 +44,103 @@ function Notice({ tone = 'info', children }) {
   return <div className={`notice notice-${tone}`} role={tone === 'danger' ? 'alert' : 'status'}>{children}</div>;
 }
 
+function isPublicViewHash(hash) {
+  return hash.split('?')[0].replace(/\/+$/, '').toLowerCase() === '#/view';
+}
+
+function publicDocumentUrl(fileName = '') {
+  const baseUrl = new URL(import.meta.env.BASE_URL, window.location.origin);
+  const path = fileName
+    ? `documents/${fileName.split('/').map(encodeURIComponent).join('/')}`
+    : 'documents/index.json';
+  return new URL(path, baseUrl);
+}
+
+function PublicClientView({ hash }) {
+  const [view, setView] = useState({ loading: true, project: null, file: '', projects: [], error: '' });
+
+  useEffect(() => {
+    let active = true;
+    const loadProject = async () => {
+      setView({ loading: true, project: null, file: '', projects: [], error: '' });
+      try {
+        const manifestResponse = await fetch(publicDocumentUrl());
+        if (!manifestResponse.ok) throw new Error('No se pudo cargar el índice de proyectos publicados.');
+        const manifest = await manifestResponse.json();
+        if (!Array.isArray(manifest.projects)) throw new Error('El índice de proyectos no tiene un formato válido.');
+
+        const projects = manifest.projects;
+        const requestedFile = new URLSearchParams(hash.split('?')[1] || '').get('project');
+        if (!projects.length) {
+          if (active) setView({ loading: false, project: null, file: '', projects, error: 'Todavía no hay proyectos JSON en la carpeta documents.' });
+          return;
+        }
+        if (requestedFile && !projects.some((item) => item.file === requestedFile)) {
+          throw new Error('El proyecto solicitado no aparece en el índice publicado.');
+        }
+        if (!requestedFile && projects.length > 1) {
+          if (active) setView({ loading: false, project: null, file: '', projects, error: '' });
+          return;
+        }
+
+        const selected = projects.find((item) => item.file === requestedFile) || projects[0];
+        const projectResponse = await fetch(publicDocumentUrl(selected.file));
+        if (!projectResponse.ok) throw new Error(`No se pudo cargar ${selected.file}.`);
+        const project = await projectResponse.json();
+        const validationErrors = validateProject(project);
+        if (validationErrors.length) throw new Error(`El archivo ${selected.file} no contiene un proyecto válido: ${validationErrors.join(' ')}`);
+        if (active) setView({ loading: false, project, file: selected.file, projects, error: '' });
+      } catch (loadError) {
+        if (active) setView({ loading: false, project: null, file: '', projects: [], error: loadError.message });
+      }
+    };
+
+    loadProject();
+    return () => { active = false; };
+  }, [hash]);
+
+  if (view.loading) return <main className="client-view"><p role="status">Cargando proyecto…</p></main>;
+  if (view.error) {
+    return (
+      <main className="client-view">
+        <section className="client-message" role="alert">
+          <h1>No se pudo mostrar el proyecto</h1>
+          <p>{view.error}</p>
+          <p>Coloca el archivo JSON y sus imágenes en <code>documents/</code> y vuelve a publicar el sitio.</p>
+        </section>
+      </main>
+    );
+  }
+  if (!view.project) {
+    return (
+      <main className="client-view">
+        <section className="client-message">
+          <p className="eyebrow">Proyectos</p>
+          <h1>Selecciona un proyecto</h1>
+          <div className="client-project-list">
+            {view.projects.map((item) => (
+              <a key={item.file} href={`#/View?project=${encodeURIComponent(item.file)}`}>
+                {item.title || 'Proyecto escolar'}
+              </a>
+            ))}
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  const mediaSrc = (media) => {
+    if (media.preview) return media.preview;
+    const path = media.path.replace(/^\/+/, '').replace(/^documents\//, '');
+    return new URL(path.split('/').map(encodeURIComponent).join('/'), publicDocumentUrl(view.file)).href;
+  };
+  return (
+    <main className="client-view">
+      <PublicPreview project={view.project} mediaSrc={mediaSrc} />
+    </main>
+  );
+}
+
 function PageHeader({ eyebrow, title, description }) {
   return (
     <div className="page-header">
@@ -56,7 +153,7 @@ function PageHeader({ eyebrow, title, description }) {
   );
 }
 
-function PublicPreview({ project, hideEmpty = true }) {
+function PublicPreview({ project, hideEmpty = true, mediaSrc = (media) => media.preview || media.path }) {
   const visibleSections = project.sections.filter((section) => !hideEmpty || section.content.trim());
   const hasGoals = project.objectives.general || project.objectives.specific.some(Boolean);
   const hasContent = project.summary || hasGoals || visibleSections.length || project.conclusions.some(Boolean) || project.recommendations.some(Boolean) || project.references.some(Boolean) || project.media.length;
@@ -93,7 +190,7 @@ function PublicPreview({ project, hideEmpty = true }) {
         )}
         {project.media.length > 0 && (
           <article className="preview-card"><h3>Galería de imágenes</h3><div className="image-grid">
-            {project.media.map((image) => <figure key={image.path}><img src={image.preview} alt={image.alt || image.name} /><figcaption>{image.alt || image.name}</figcaption></figure>)}
+            {project.media.map((image) => <figure key={image.path}><img src={mediaSrc(image)} alt={image.alt || image.name} /><figcaption>{image.alt || image.name}</figcaption></figure>)}
           </div></article>
         )}
       </div>
@@ -103,6 +200,7 @@ function PublicPreview({ project, hideEmpty = true }) {
 
 function App() {
   const [activePage, setActivePage] = useState('home');
+  const [routeHash, setRouteHash] = useState(() => window.location.hash);
   const [project, setProject] = useState(createEmptyProject);
   const [pdfFile, setPdfFile] = useState(null);
   const [imageFiles, setImageFiles] = useState({});
@@ -130,6 +228,13 @@ function App() {
     return count;
   }, [project]);
   const validationErrors = useMemo(() => validateProject(project), [project]);
+  const isClientView = isPublicViewHash(routeHash);
+
+  useEffect(() => {
+    const syncHash = () => setRouteHash(window.location.hash);
+    window.addEventListener('hashchange', syncHash);
+    return () => window.removeEventListener('hashchange', syncHash);
+  }, []);
 
   useEffect(() => {
     if (!publicUrl) {
@@ -383,6 +488,7 @@ function App() {
   const renderPreview = () => (
     <>
       <PageHeader eyebrow="Sitio público" title="Vista previa del proyecto" description="Así se organizará el contenido en el sitio público exportado." />
+      <a className="button button-outline client-view-link" href={`${import.meta.env.BASE_URL}#/View`} target="_blank" rel="noreferrer">Abrir vista pública</a>
       <PublicPreview project={project} hideEmpty={hideEmpty} />
     </>
   );
@@ -439,6 +545,8 @@ function App() {
       default: return renderHome();
     }
   };
+
+  if (isClientView) return <PublicClientView key={routeHash} hash={routeHash} />;
 
   return (
     <div className="app-shell">

@@ -137,6 +137,14 @@ button { cursor: pointer; }
 .media-row label { margin: 0; }
 .media-row .remove-button { margin: 0; }
 .public-preview { overflow: hidden; border: 1px solid #e5eaf0; border-radius: 13px; background: #f5f7fb; }
+.client-view { box-sizing: border-box; width: min(100%, 1100px); min-height: 100vh; margin: 0 auto; padding: clamp(12px, 3vw, 30px); }
+.client-message { margin: 12vh auto 0; padding: clamp(24px, 5vw, 44px); border: 1px solid #e5eaf0; border-radius: 13px; background: #fff; color: #394e65; }
+.client-message h1 { margin: 0 0 12px; color: #223b57; font-family: Manrope, sans-serif; font-size: clamp(22px, 4vw, 32px); }
+.client-message p { line-height: 1.7; }
+.client-project-list { display: grid; gap: 10px; margin-top: 20px; }
+.client-project-list a { padding: 14px; border: 1px solid #e5eaf0; border-radius: 9px; color: #267e7d; text-decoration: none; }
+.client-project-list a:hover { background: #f5f9f8; }
+.client-view-link { margin-bottom: 12px; text-decoration: none; }
 .preview-hero { padding: clamp(30px, 6vw, 62px); background: linear-gradient(120deg, #17385c, #267e7d); color: #fff; }
 .preview-hero .eyebrow { color: #a9ddd7; }
 .preview-hero h2 { max-width: 760px; margin: 6px 0 10px; font-family: Manrope, sans-serif; font-size: clamp(26px, 4vw, 43px); line-height: 1.08; letter-spacing: -1.3px; }
