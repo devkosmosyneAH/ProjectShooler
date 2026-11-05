@@ -420,12 +420,15 @@ function PublicPreview({
             {(firstMedia.title ||
               firstMedia.description ||
               firstMedia.alt ||
-              firstMedia.name) && (
+              firstMedia.name ||
+              firstMedia.section) && (
               <figcaption>
-                {firstMedia.title ||
-                  firstMedia.description ||
-                  firstMedia.alt ||
-                  firstMedia.name}
+                {firstMedia.title && <strong>{firstMedia.title}</strong>}
+                {firstMedia.description && <span>{firstMedia.description}</span>}
+                {!firstMedia.title && !firstMedia.description &&
+                  (firstMedia.alt || firstMedia.name)}
+                {firstMedia.section &&
+                  ` · ${project.sections.find((section) => section.id === firstMedia.section)?.title || firstMedia.section}`}
               </figcaption>
             )}
           </figure>
@@ -889,7 +892,7 @@ function App() {
     }
     try {
       const additions = await Promise.all(
-        validFiles.map(async (file) => {
+        validFiles.map(async (file, index) => {
           const id = uniqueMediaId("image");
           const extension =
             file.name.match(/\.(?:jpe?g|png|webp)$/i)?.[0].toLowerCase() || "";
@@ -948,7 +951,8 @@ function App() {
       setImageProgress({ current: 0, total: additions.length });
       try {
         const analysis = await analyzeImageFiles(validFiles, {
-          onProgress: setImageProgress,
+          onProgress: (progressEvent) =>
+            setImageProgress((current) => ({ ...current, ...progressEvent })),
         });
         const results = new Map(
           additions.map(({ image }, index) => [image.id, analysis[index]]),
@@ -1863,8 +1867,8 @@ function App() {
           </div>
           <div className="progress-bottom">
             <span>
-              Solo OCR; no se realiza reconocimiento visual de diagramas o
-              gráficos.
+              {imageProgress?.status ||
+                "Solo OCR; no se realiza reconocimiento visual de diagramas o gráficos."}
             </span>
           </div>
         </section>
@@ -2847,9 +2851,7 @@ function App() {
         </div>
       </main>
       {error &&
-        activePage !== "import" &&
-        activePage !== "export" &&
-        activePage !== "qr" && (
+        !["import", "images", "videos", "export", "qr"].includes(activePage) && (
           <div className="toast-error" role="alert">
             {error}
             <button onClick={() => setError("")} aria-label="Cerrar aviso">

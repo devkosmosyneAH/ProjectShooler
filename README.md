@@ -32,7 +32,7 @@ El ZIP incluye `public/index.html`, `public/app.js`, `public/styles.css`, `publi
 
 ## Metadatos multimedia
 
-`public/data/proyecto.json` mantiene compatibilidad con los recursos existentes y referencia `multimedia.json`. El archivo multimedia contiene `images`, `videos` y `resourceConfig`. Una imagen conserva `id`, `title`, `description`, `visualDescription`, `alt`, `src`/`path`, `section`, `order`, `featured`, `ocrText`, `ocrConfidence`, `ocrReviewRequired` y la clasificación heurística de líneas OCR. Solo `ocrText` procede del reconocimiento; las descripciones visuales son contenido manual. No se publica una interpretación automática de diagramas o gráficos.
+`public/data/proyecto.json` mantiene compatibilidad con los recursos existentes y referencia `multimedia.json`. El archivo multimedia contiene `images`, `videos` y `resourceConfig`. Una imagen conserva `id`, `title`, `description`, `visualDescription`, `alt`, `path`, `section`, `order`, `featured`, `ocrText`, `ocrConfidence`, `ocrReviewRequired`, el estado de revisión y la clasificación heurística de líneas OCR. Solo `ocrText` procede del reconocimiento; las descripciones visuales son contenido manual. No se publica una interpretación automática de diagramas o gráficos.
 
 Cada video incluye `id`, `title`, `description`, `platform: "youtube"`, URL original, `videoId`, URL `youtube-nocookie.com`, sección y orden. El reproductor vuelve a validar el dominio y el identificador antes de crear el iframe.
 

@@ -150,7 +150,7 @@ async function loadProject() {
         const image = document.createElement('img');
         image.src = imageUrl(item);
         image.alt = item.alt || item.title || item.name || 'Imagen del proyecto';
-        image.loading = 'lazy';
+        image.setAttribute('loading', 'lazy');
         image.decoding = 'async';
         button.append(image);
         button.addEventListener('click', () => openGallery(index));
@@ -178,7 +178,7 @@ async function loadProject() {
         const iframe = document.createElement('iframe');
         iframe.src = parsed;
         iframe.title = video.title || 'Video de YouTube';
-        iframe.loading = 'lazy';
+        iframe.setAttribute('loading', 'lazy');
         iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
         iframe.referrerPolicy = 'strict-origin-when-cross-origin';
         iframe.allowFullscreen = true;

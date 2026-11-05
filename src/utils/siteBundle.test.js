@@ -134,12 +134,60 @@ describe('static site and JSON exports', () => {
     await expect(createSiteZip(project, {})).rejects.toThrow(/No se exportaron referencias rotas/);
   });
 
+  test('renders gallery images from multimedia JSON using relative paths', async () => {
+    const project = sampleProject();
+    const path = 'images/proyecto/image-gallery.webp';
+    const image = new File(['image'], 'image-gallery.webp', { type: 'image/webp' });
+    project.media = [{
+      id: 'image-gallery',
+      title: 'Imagen desde JSON',
+      description: 'Descripción',
+      name: image.name,
+      alt: 'Texto alternativo',
+      path,
+      source: 'local',
+      section: 'introduction',
+      order: 1,
+      featured: false,
+      ocrText: 'Texto leído',
+    }];
+    const archive = await JSZip.loadAsync(await createSiteZip(project, { [path]: image }));
+    const resources = createProjectFiles(project);
+    globalThis.fetch = vi.fn(async (url) => ({
+      ok: Boolean(resources[url.replace('./data/', '')]),
+      json: async () => JSON.parse(resources[url.replace('./data/', '')]),
+    }));
+    document.body.innerHTML = '<div id="project"></div>';
+    const runtime = await archive.file('public/app.js').async('string');
+    const execute = new Function(runtime.replace(/\nloadProject\(\);\s*$/, '\nreturn loadProject();'));
+
+    await execute();
+
+    const galleryImage = document.querySelector('.gallery img');
+    expect(galleryImage).toHaveAttribute('src', `./${path}`);
+    expect(galleryImage).toHaveAttribute('alt', 'Texto alternativo');
+    expect(galleryImage).toHaveAttribute('loading', 'lazy');
+    expect(document.querySelector('.gallery strong')).toHaveTextContent('Imagen desde JSON');
+    expect(JSON.parse(resources['multimedia.json']).images[0].ocrText).toBe('Texto leído');
+  });
+
   test('loads JSON from an explicitly configured GitHub Raw base without rewriting Pages URLs', async () => {
     const project = sampleProject();
     project.resourceConfig = {
       mode: 'github-raw',
       rawBaseUrl: 'https://raw.githubusercontent.com/team/school-project/main/public/',
     };
+    project.videos = [{
+      id: 'video-a1B2c3',
+      title: 'Video del proyecto',
+      description: 'Descripción del video',
+      platform: 'youtube',
+      url: 'https://www.youtube.com/watch?v=a1B2c3D4e5F&feature=share',
+      videoId: 'a1B2c3D4e5F',
+      embedUrl: 'https://www.youtube-nocookie.com/embed/a1B2c3D4e5F',
+      section: 'introduction',
+      order: 1,
+    }];
     const archive = await JSZip.loadAsync(await createSiteZip(project));
     const runtime = await archive.file('public/app.js').async('string');
     const files = createProjectFiles(project);
@@ -156,6 +204,8 @@ describe('static site and JSON exports', () => {
 
     expect(globalThis.fetch).toHaveBeenCalledWith(`${base}data/proyecto.json`);
     expect(globalThis.fetch).toHaveBeenCalledWith(`${base}data/multimedia.json`);
+    expect(document.querySelector('.video-frame iframe')).toHaveAttribute('src', 'https://www.youtube-nocookie.com/embed/a1B2c3D4e5F');
+    expect(document.querySelector('.video-frame iframe')).toHaveAttribute('loading', 'lazy');
     expect(runtime).not.toContain('https://team.github.io/');
   });
 });

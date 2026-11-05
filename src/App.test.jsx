@@ -53,6 +53,7 @@ test("navigates to PDF import", () => {
       screen.getByRole("navigation", { name: /navegación principal/i }),
     ).getByRole("button", { name: /importar pdf/i }),
   );
+  expect(document.querySelector(".infographic-videos")).toBeNull();
   expect(
     screen.getByRole("heading", { name: /importa tu documento/i }),
   ).toBeInTheDocument();
@@ -191,6 +192,12 @@ test("imports and OCR-analyzes multiple images while keeping OCR text editable",
   expect(ocrFields[0]).toHaveValue("Texto OCR 1");
   fireEvent.change(ocrFields[0], { target: { value: "Texto OCR corregido" } });
   expect(ocrFields[0]).toHaveValue("Texto OCR corregido");
+  fireEvent.change(screen.getAllByLabelText("Título")[0], { target: { value: "Fotografía revisada" } });
+  fireEvent.change(screen.getAllByLabelText("Descripción publicada")[0], { target: { value: "Descripción manual" } });
+  fireEvent.change(screen.getAllByLabelText("Sección asociada")[0], { target: { value: "introduction" } });
+  fireEvent.click(screen.getByRole("button", { name: /vista previa/i }));
+  expect(await screen.findByText("Fotografía revisada")).toBeInTheDocument();
+  expect(screen.getByText("Descripción manual")).toBeInTheDocument();
 });
 
 test("adds a validated YouTube URL to the administrator preview", async () => {
