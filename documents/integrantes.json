@@ -1,0 +1,54 @@
+{
+  "integrantes": [
+    {
+      "id": "integrante-1793917636901",
+      "name": "Antonella Abad",
+      "role": ""
+    },
+    {
+      "id": "integrante-1793917658354",
+      "name": "Diosmel Chuquiguanga ",
+      "role": ""
+    },
+    {
+      "id": "integrante-1793917659008",
+      "name": "Fabian Calva",
+      "role": ""
+    },
+    {
+      "id": "integrante-1793917661146",
+      "name": "Ronny Calle",
+      "role": ""
+    },
+    {
+      "id": "integrante-1793917663190",
+      "name": "Joao Alvarez",
+      "role": ""
+    },
+    {
+      "id": "integrante-1793917663791",
+      "name": "Kimberly Granda",
+      "role": ""
+    },
+    {
+      "id": "integrante-1793917664394",
+      "name": "Doménica Gallo",
+      "role": ""
+    },
+    {
+      "id": "integrante-1793917665268",
+      "name": "Dayana Goméz ",
+      "role": ""
+    },
+    {
+      "id": "integrante-1793917666314",
+      "name": "Pablo Jaramillo",
+      "role": ""
+    },
+    {
+      "id": "integrante-1793917666918",
+      "name": "Yesly Jumbo",
+      "role": ""
+    }
+  ]
+}

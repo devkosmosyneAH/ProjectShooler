@@ -530,6 +530,64 @@ export function validateProject(project) {
   return errors;
 }
 
+export function hydrateProjectFromFiles(project, documents = {}) {
+  if (!project || typeof project !== "object" || Array.isArray(project)) {
+    throw new Error("El contenido del proyecto debe ser un objeto JSON.");
+  }
+  if (!project.content || typeof project.content !== "object") return project;
+
+  const authorsDocument = documents.integrantes || {};
+  const developmentDocument = documents.desarrollo || {};
+  const multimediaDocument = documents.multimedia || {};
+  const authors = Array.isArray(authorsDocument.integrantes)
+    ? authorsDocument.integrantes
+    : [];
+  const developmentSections = Array.isArray(developmentDocument.sections)
+    ? developmentDocument.sections
+    : [];
+  const sectionContent = new Map(
+    developmentSections.map((section) => [section.id, section]),
+  );
+  const authorRecords = new Map(authors.map((author) => [author.id, author]));
+  const sections = Array.isArray(project.sections)
+    ? project.sections.map((section) => ({
+        ...section,
+        ...(sectionContent.get(section.id) || {}),
+        content: sectionContent.get(section.id)?.content || "",
+      }))
+    : developmentSections;
+  const media = Array.isArray(multimediaDocument.images)
+    ? multimediaDocument.images
+    : project.media || [];
+
+  return {
+    ...project,
+    authors: Array.isArray(project.authors)
+      ? project.authors.map((author) =>
+          typeof author === "string" ? authorRecords.get(author) : author,
+        )
+      : authors,
+    objectives: documents.objetivos || project.objectives || {
+      general: "",
+      specific: [],
+    },
+    sections,
+    tables: developmentDocument.tables || [],
+    recommendations: developmentDocument.recommendations || [],
+    conclusions:
+      documents.conclusiones?.items || project.conclusions || [],
+    references: documents.referencias?.items || project.references || [],
+    media,
+    videos:
+      Array.isArray(multimediaDocument.videos)
+        ? multimediaDocument.videos
+        : project.videos || [],
+    resourceConfig:
+      multimediaDocument.resourceConfig ||
+      project.resourceConfig || { mode: "local", rawBaseUrl: "" },
+  };
+}
+
 export function createProjectFiles(
   project,
   { includeOriginal = false, hideEmptySections = true } = {},

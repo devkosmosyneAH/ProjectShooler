@@ -8,7 +8,7 @@ import {
 import { afterEach, beforeEach, vi } from "vitest";
 import App from "./App";
 import { processPdf } from "./utils/pdfProcessor";
-import { createEmptyProject } from "./utils/projectData";
+import { createEmptyProject, createProjectFiles } from "./utils/projectData";
 import { analyzeImageFiles } from "./utils/multimedia";
 
 vi.mock("./utils/multimedia", async (importOriginal) => {
@@ -171,6 +171,72 @@ test("renders only the public project at the View hash route", async () => {
   );
 });
 
+test("hydrates the separated project JSON files in the public View route", async () => {
+  const project = createEmptyProject();
+  project.projectId = "proyecto-dividido";
+  project.title = "Proyecto dividido";
+  project.authors = [{ id: "autor-1", name: "Ana", role: "Estudiante" }];
+  project.objectives.general = "Investigar el tema.";
+  project.sections[0].content = "Contenido desde desarrollo.json";
+  project.conclusions = ["Conclusión desde conclusiones.json"];
+  project.references = ["Referencia desde referencias.json"];
+  project.media = [
+    {
+      id: "image-1",
+      title: "Imagen del proyecto",
+      name: "foto.png",
+      alt: "Fotografía del proyecto",
+      path: "images/proyecto/foto.png",
+      source: "local",
+      section: "introduction",
+      order: 1,
+      ocrText: "Texto OCR conservado",
+    },
+  ];
+  project.videos = [
+    {
+      id: "video-1",
+      title: "Video del proyecto",
+      description: "Descripción del video",
+      platform: "youtube",
+      url: "https://youtu.be/a1B2c3D4e5F",
+      videoId: "a1B2c3D4e5F",
+      embedUrl: "https://www.youtube-nocookie.com/embed/a1B2c3D4e5F",
+      section: "introduction",
+      order: 1,
+    },
+  ];
+  const files = createProjectFiles(project);
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url) => {
+      const path = new URL(String(url)).pathname;
+      if (path.endsWith("/documents/index.json")) {
+        return { ok: false, status: 404 };
+      }
+      const filename = decodeURIComponent(path.split("/").pop());
+      if (!files[filename]) return { ok: false };
+      return { ok: true, json: async () => JSON.parse(files[filename]) };
+    }),
+  );
+  window.location.hash = "#/view/";
+
+  render(<App />);
+
+  expect(
+    await screen.findByRole("heading", { name: project.title }),
+  ).toBeInTheDocument();
+  expect(screen.getByText(/Por Ana/)).toBeInTheDocument();
+  expect(screen.getByText("Contenido desde desarrollo.json")).toBeInTheDocument();
+  expect(screen.getByText("Investigar el tema.")).toBeInTheDocument();
+  expect(screen.getByText("Conclusión desde conclusiones.json")).toBeInTheDocument();
+  expect(screen.getByAltText("Fotografía del proyecto")).toBeInTheDocument();
+  expect(screen.getByTitle("Video del proyecto")).toHaveAttribute(
+    "src",
+    "https://www.youtube-nocookie.com/embed/a1B2c3D4e5F",
+  );
+});
+
 test("imports and OCR-analyzes multiple images while keeping OCR text editable", async () => {
   analyzeImageFiles.mockImplementation(async (files) => files.map((_, index) => ({
     ocrText: `Texto OCR ${index + 1}`,
@@ -198,6 +264,46 @@ test("imports and OCR-analyzes multiple images while keeping OCR text editable",
   fireEvent.click(screen.getByRole("button", { name: /vista previa/i }));
   expect(await screen.findByText("Fotografía revisada")).toBeInTheDocument();
   expect(screen.getByText("Descripción manual")).toBeInTheDocument();
+});
+
+test("replaces an image file without changing its OCR results or rerunning OCR", async () => {
+  analyzeImageFiles.mockResolvedValue([
+    {
+      ocrText: "Texto OCR que ya se había leído",
+      ocrConfidence: 91,
+      ocrReviewRequired: false,
+      ocrReviewed: true,
+      ocrClassification: { titles: ["Título original"], paragraphs: [], dates: [], data: [] },
+    },
+  ]);
+  render(<App />);
+  fireEvent.click(screen.getByRole("button", { name: /imágenes y ocr/i }));
+  const original = new File(["original"], "original.jpg", {
+    type: "image/jpeg",
+  });
+  fireEvent.change(screen.getByLabelText(/seleccionar varias imágenes/i), {
+    target: { files: [original] },
+  });
+  const ocrField = await screen.findByLabelText("Texto reconocido por OCR");
+  await waitFor(() => expect(ocrField).toHaveValue("Texto OCR que ya se había leído"));
+
+  const replacement = new File(["replacement"], "replacement.webp", {
+    type: "image/webp",
+  });
+  fireEvent.change(
+    screen.getByLabelText(/reemplazar imagen original\.jpg \(conserva el ocr\)/i),
+    { target: { files: [replacement] } },
+  );
+
+  expect(ocrField).toHaveValue("Texto OCR que ya se había leído");
+  expect(screen.getByText(/confianza: 91%/i)).toBeInTheDocument();
+  expect(
+    screen.getByLabelText(/confirmo que revisé el texto ocr/i),
+  ).toBeChecked();
+  expect(analyzeImageFiles).toHaveBeenCalledTimes(1);
+  await waitFor(() =>
+    expect(screen.getByText("replacement.webp")).toBeInTheDocument(),
+  );
 });
 
 test("adds a validated YouTube URL to the administrator preview", async () => {

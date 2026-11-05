@@ -1,0 +1,426 @@
+{
+  "images": [
+    {
+      "id": "image-1793916505109-av65u8",
+      "title": "La región Costa del Ecuador",
+      "description": "",
+      "visualDescription": "",
+      "name": "WhatsApp Image 2026-11-05 at 16.44.53.jpeg",
+      "alt": "",
+      "path": "images/proyecto/image-1793916505109-av65u8-WhatsApp-Image-2026-11-05-at-16-44-53.jpeg",
+      "source": "local",
+      "section": "theory",
+      "order": 1,
+      "featured": false,
+      "ocrText": "La región Costa del Ecuador está ubicada\nal oeste del país, entre la cordillera de los\nAndes y el océano Pacífico. Está formada\npor siete provincias y tiene una extensión\nterritorial aproximada de 71.829 km?. Su\ndivisión política comprende 86 cantones,\nque se subdividen en parroquias urbanas\n\ny rurales. Manabí es la provincia más\nextensa de la región.\n\nSu clima es principalmente tropical y\ncálido, con dos estaciones: invierno y\nverano. Su territorio está formado por\nextensas llanuras, valles, colinas, montañas\ny hermosas playas. Además, cuenta\n\ncon importantes ríos, como el Guayas,\nEsmeraldas, Daule, Babahoyo y Chone, que\nfavorecen la agricultura y otras actividades\neconómicas.",
+      "ocrConfidence": 95,
+      "ocrReviewRequired": false,
+      "ocrReviewed": true,
+      "ocrClassification": {
+        "titles": [
+          "La región Costa del Ecuador",
+          "La región Costa del Ecuador está ubicada",
+          "al oeste del país, entre la cordillera de los",
+          "Andes y el océano Pacífico. Está formada",
+          "por siete provincias y tiene una extensión",
+          "que se subdividen en parroquias urbanas",
+          "y rurales. Manabí es la provincia más",
+          "Su clima es principalmente tropical y",
+          "cálido, con dos estaciones: invierno y",
+          "verano. Su territorio está formado por",
+          "extensas llanuras, valles, colinas, montañas",
+          "y hermosas playas. Además, cuenta",
+          "con importantes ríos, como el Guayas,",
+          "Esmeraldas, Daule, Babahoyo y Chone, que",
+          "favorecen la agricultura y otras actividades"
+        ],
+        "paragraphs": [
+          "extensa de la región.",
+          "económicas."
+        ],
+        "dates": [],
+        "data": [
+          "territorial aproximada de 71.829 km?. Su",
+          "división política comprende 86 cantones,"
+        ]
+      },
+      "visualReviewRequired": false,
+      "visualReviewed": true
+    },
+    {
+      "id": "image-1793916505109-cr43mt",
+      "title": "Altitud de las provincias de la Costa del Ecuador",
+      "description": "",
+      "visualDescription": "",
+      "name": "WhatsApp Image 2026-11-05 at 16.44.56 (1).jpeg",
+      "alt": "",
+      "path": "images/proyecto/image-1793916505109-cr43mt-WhatsApp-Image-2026-11-05-at-16-44-56--1.jpeg",
+      "source": "local",
+      "section": "theory",
+      "order": 2,
+      "featured": false,
+      "ocrText": "N.° Provincia Altitud de referencia\n1 Guayas 4 ms. n.m.\n2 Manabí 6 Ms. n. M.\n3 Los Ríos 50 ms. n.m.\n4 El Oro 6 Ms. n. M.\n5 Esmeraldas 15 ms. n.m.\n6 Santo Domingo de los Tsáchilas 625 MS. n. m.\n7 Santa Elena 40 ms. n. m.",
+      "ocrConfidence": 80,
+      "ocrReviewRequired": false,
+      "ocrReviewed": true,
+      "ocrClassification": {
+        "titles": [
+          "Altitud de las provincias de la",
+          "Costa del Ecuador",
+          "referencia",
+          "Tsáchilas"
+        ],
+        "paragraphs": [],
+        "dates": [],
+        "data": [
+          "N.9 Provincia Altitud de",
+          "1 Guayas 4 ms. n.m.",
+          "2 Manabí 6 Ms. n. M.",
+          "3 Los Ríos 50 ms. n.m.",
+          "4 El Oro 6 Ms. n. M.",
+          "5 Esmeraldas 15 ms. n.m.",
+          "6 Santo Domingo de los 625 MS. n. m.",
+          "7 Santa Elena 40 ms. n. m."
+        ]
+      },
+      "visualReviewRequired": false,
+      "visualReviewed": true
+    },
+    {
+      "id": "image-1793916505109-bv5147",
+      "title": "POBLACIÓN DE LAS PROVINCIAS DE LA COSTA DEL ECUADOR - 2025",
+      "description": "",
+      "visualDescription": "",
+      "name": "WhatsApp Image 2026-11-05 at 16.44.56.jpeg",
+      "alt": "",
+      "path": "images/proyecto/image-1793916505109-bv5147-WhatsApp-Image-2026-11-05-at-16-44-56.jpeg",
+      "source": "local",
+      "section": "theory",
+      "order": 3,
+      "featured": false,
+      "ocrText": "N.° Provincia Población\n1 Guayas 4.788.157\n2 Manabí 1.715.057\n3 LosRios 978.487\n4 El Oro 753.036\n5 Esmeraldas 605.377\n6 Santo Domingo de los 528.509\nTsáchilas\n7 SantaElena 406.947\nTOTAL 9.775.570",
+      "ocrConfidence": 91,
+      "ocrReviewRequired": false,
+      "ocrReviewed": true,
+      "ocrClassification": {
+        "titles": [
+          "POBLACIÓN DE LAS",
+          "PROVINCIAS DE LA COSTA DEL",
+          "N.° Provincia Población",
+          "Tsáchilas"
+        ],
+        "paragraphs": [],
+        "dates": [],
+        "data": [
+          "ECUADOR - 2025",
+          "1 Guayas 4.788.157",
+          "2 Manabí 1.715.057",
+          "3 LosRios 978.487",
+          "4 El Oro 753.036",
+          "5 Esmeraldas 605.377",
+          "6 Santo Domingo de los 528.509",
+          "7 SantaElena 406.947",
+          "TOTAL 9.775.570"
+        ]
+      },
+      "visualReviewRequired": false,
+      "visualReviewed": true
+    },
+    {
+      "id": "image-1793916505109-gjgqa4",
+      "title": "Ríos más largos de las provincias de la Costa",
+      "description": "",
+      "visualDescription": "",
+      "name": "WhatsApp Image 2026-11-05 at 16.44.57 (1).jpeg",
+      "alt": "",
+      "path": "images/proyecto/image-1793916505109-gjgqa4-WhatsApp-Image-2026-11-05-at-16-44-57--1.jpeg",
+      "source": "local",
+      "section": "theory",
+      "order": 4,
+      "featured": false,
+      "ocrText": "Provincia Río principal Longitud\naproximada\nGuayas Río Guayas 168,4 km\nManabí Río Portoviejo 106 km\nLos Ríos Río Babahoyo 236 km\nEl Oro Río Puyango 115,7 km\nEsmeraldas Río 235,8 km\nEsmeraldas\n\nSanto Domingo — Río Blanco No verificada\nde los Tsáchilas\nSanta Elena Río Zapotal 62,8 km\nOtros ríos importantes:\n\n* Guayas: Daule y Babahoyo.\n\n* Manabí: Chone y Jama.\n\n* Los Ríos: Quevedo y Vinces.\n\n* El Oro: Jubones y Santa Rosa.",
+      "ocrConfidence": 94,
+      "ocrReviewRequired": false,
+      "ocrReviewed": true,
+      "ocrClassification": {
+        "titles": [
+          "Ríos más largos de las provincias",
+          "de la Costa",
+          "Provincia Río principal Longitud",
+          "aproximada",
+          "Esmeraldas",
+          "Santo Domingo — Río Blanco No verificada",
+          "de los Tsáchilas",
+          "Otros ríos importantes:"
+        ],
+        "paragraphs": [
+          "* Guayas: Daule y Babahoyo.",
+          "* Manabí: Chone y Jama.",
+          "* Los Ríos: Quevedo y Vinces.",
+          "* El Oro: Jubones y Santa Rosa."
+        ],
+        "dates": [],
+        "data": [
+          "Guayas Río Guayas 168,4 km",
+          "Manabí Río Portoviejo 106 km",
+          "Los Ríos Río Babahoyo 236 km",
+          "El Oro Río Puyango 115,7 km",
+          "Esmeraldas Río 235,8 km",
+          "Santa Elena Río Zapotal 62,8 km"
+        ]
+      },
+      "visualReviewRequired": false,
+      "visualReviewed": true
+    },
+    {
+      "id": "image-1793916505110-e6dtto",
+      "title": "Actividades principales por provincia",
+      "description": "",
+      "visualDescription": "",
+      "name": "WhatsApp Image 2026-11-05 at 16.44.57 (2).jpeg",
+      "alt": "",
+      "path": "images/proyecto/image-1793916505110-e6dtto-WhatsApp-Image-2026-11-05-at-16-44-57--2.jpeg",
+      "source": "local",
+      "section": "theory",
+      "order": 5,
+      "featured": false,
+      "ocrText": "Provincia Actividades destacadas\n\nEsmeraldas Pesca, agricultura, turismo y\nganadería\n\nManabí Pesca, agricultura, ganadería y\nturismo\n\nSanto Domingo Agricultura, ganadería y\ncomercio\n\nLos Rios Cultivo de arroz, cacao, banano y\nmaíz\n\nGuayas Comercio, industria, agricultura y\npesca\n\nSanta Elena Turismo, pesca y agricultura\n\nEl Oro Producción de banano, camarón,\npesca y minería",
+      "ocrConfidence": 94,
+      "ocrReviewRequired": false,
+      "ocrReviewed": true,
+      "ocrClassification": {
+        "titles": [
+          "Actividades principales por",
+          "provincia",
+          "Provincia Actividades destacadas",
+          "Esmeraldas Pesca, agricultura, turismo y",
+          "ganadería",
+          "Manabí Pesca, agricultura, ganadería y",
+          "turismo",
+          "Santo Domingo Agricultura, ganadería y",
+          "comercio",
+          "Los Rios Cultivo de arroz, cacao, banano y",
+          "maíz",
+          "Guayas Comercio, industria, agricultura y",
+          "pesca",
+          "Santa Elena Turismo, pesca y agricultura",
+          "El Oro Producción de banano, camarón,",
+          "pesca y minería"
+        ],
+        "paragraphs": [],
+        "dates": [],
+        "data": []
+      },
+      "visualReviewRequired": false,
+      "visualReviewed": true
+    },
+    {
+      "id": "image-1793916505110-d1omrx",
+      "title": "Extensión territorial de cada provincia",
+      "description": "",
+      "visualDescription": "",
+      "name": "WhatsApp Image 2026-11-05 at 16.44.57 (3).jpeg",
+      "alt": "",
+      "path": "images/proyecto/image-1793916505110-d1omrx-WhatsApp-Image-2026-11-05-at-16-44-57--3.jpeg",
+      "source": "local",
+      "section": "theory",
+      "order": 6,
+      "featured": false,
+      "ocrText": "Provincia Capital Extensión\nterritorial\n\nEsmeraldas Esmeraldas 15.836 km?\n\nManabí Portoviejo 19.517 km?\n\nSanto Santo 3.780 km?\n\nDomingo de Domingo\n\nlos Tsáchilas\n\nLos Ríos Babahoyo 7.238 km?\n\nGuayas Guayaquil 15.900 km?\n\nSanta Elena Santa Elena 3.688 km?\n\nEl Oro Machala 5.870 km?",
+      "ocrConfidence": 95,
+      "ocrReviewRequired": false,
+      "ocrReviewed": true,
+      "ocrClassification": {
+        "titles": [
+          "Extensión territorial de cada",
+          "provincia",
+          "Provincia Capital Extensión",
+          "territorial",
+          "Domingo de Domingo",
+          "los Tsáchilas"
+        ],
+        "paragraphs": [],
+        "dates": [],
+        "data": [
+          "Esmeraldas Esmeraldas 15.836 km?",
+          "Manabí Portoviejo 19.517 km?",
+          "Santo Santo 3.780 km?",
+          "Los Ríos Babahoyo 7.238 km?",
+          "Guayas Guayaquil 15.900 km?",
+          "Santa Elena Santa Elena 3.688 km?",
+          "El Oro Machala 5.870 km?"
+        ]
+      },
+      "visualReviewRequired": false,
+      "visualReviewed": true
+    },
+    {
+      "id": "image-1793916505110-vg6c8x",
+      "title": "División territorial de cada provincia",
+      "description": "",
+      "visualDescription": "",
+      "name": "WhatsApp Image 2026-11-05 at 16.44.57 (4).jpeg",
+      "alt": "",
+      "path": "images/proyecto/image-1793916505110-vg6c8x-WhatsApp-Image-2026-11-05-at-16-44-57--4.jpeg",
+      "source": "local",
+      "section": "theory",
+      "order": 7,
+      "featured": false,
+      "ocrText": "Provincia Número de\ncantones\nEsmeraldas 7\nManabí 22\nSanto Domingo de los 2\nTsáchilas\nLos Ríos 13\nGuayas 25\nSanta Elena 3\nEl Oro 14\nTotal 86",
+      "ocrConfidence": 95,
+      "ocrReviewRequired": false,
+      "ocrReviewed": true,
+      "ocrClassification": {
+        "titles": [
+          "División territorial de cada",
+          "provincia",
+          "Provincia Número de",
+          "cantones",
+          "Tsáchilas"
+        ],
+        "paragraphs": [],
+        "dates": [],
+        "data": [
+          "Esmeraldas 7",
+          "Manabí 22",
+          "Santo Domingo de los 2",
+          "Los Ríos 13",
+          "Guayas 25",
+          "Santa Elena 3",
+          "El Oro 14",
+          "Total 86"
+        ]
+      },
+      "visualReviewRequired": false,
+      "visualReviewed": true
+    },
+    {
+      "id": "image-1793916505110-4vxa20",
+      "title": "Montañas más altas de las provincias de la Costa",
+      "description": "",
+      "visualDescription": "",
+      "name": "WhatsApp Image 2026-11-05 at 16.44.57.jpeg",
+      "alt": "",
+      "path": "images/proyecto/image-1793916505110-4vxa20-WhatsApp-Image-2026-11-05-at-16-44-57.jpeg",
+      "source": "local",
+      "section": "theory",
+      "order": 8,
+      "featured": false,
+      "ocrText": "N.° Provincia Elevación más Altura\nalta\n1 Guayas Cordillera de 2.166 m\nMolleturo\n2 Manabí Cordillera de 849 m\nColonche\n3 Los Ríos Punto más alto 1.523m\nprovincial\n4 ElOro Pico 3883 3.8833 m\n5 Esmeraldas Cordillera de 3.499 m\nToisán\n6 Santo Domingo Pico Oriental 3.033 m\nde los\nTsáchilas\n7 SantaElena Cordillera de 849 m\nColonche",
+      "ocrConfidence": 89,
+      "ocrReviewRequired": false,
+      "ocrReviewed": true,
+      "ocrClassification": {
+        "titles": [
+          "Montañas más altas de las",
+          "provincias de la Costa",
+          "alta",
+          "Molleturo",
+          "Colonche",
+          "provincial",
+          "Toisán",
+          "de los",
+          "Tsáchilas",
+          "Colonche"
+        ],
+        "paragraphs": [],
+        "dates": [],
+        "data": [
+          "N.9 Provincia Elevación más Altura",
+          "1 Guayas Cordillera de 2.166 m",
+          "2 Manabí Cordillera de 849 m",
+          "3 Los Ríos Punto más alto 1.523m",
+          "4 ElOro Pico 3883 3.8833 m",
+          "5 Esmeraldas Cordillera de 3.499 m",
+          "6 Santo Domingo Pico Oriental 3.033 m",
+          "7 SantaElena Cordillera de 849 m"
+        ]
+      },
+      "visualReviewRequired": false,
+      "visualReviewed": true
+    }
+  ],
+  "videos": [
+    {
+      "id": "video-1793917006045-qwr20d",
+      "title": "Esmeraldas, Cultura, Economía y Gastronomía",
+      "description": "Descubre la riqueza de Esmeraldas, una provincia llena de historia, tradiciones y diversidad cultural. Conoce sus raíces afroecuatorianas, sus expresiones artísticas, música y danzas tradicionales, así como las principales actividades económicas que impulsan su desarrollo. Explora también su exquisita gastronomía, caracterizada por sabores únicos del Pacífico, donde destacan el encocado, el tapao arrecho, el ceviche y los deliciosos platos elaborados con mariscos, coco y productos locales. Un recorrido por la identidad, el trabajo y las tradiciones que hacen de Esmeraldas una tierra llena de vida y encanto.",
+      "platform": "youtube",
+      "url": "https://youtube.com/watch?v=Jq0ToW7BpXM&feature=shared",
+      "videoId": "Jq0ToW7BpXM",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/Jq0ToW7BpXM",
+      "section": "results",
+      "order": 1
+    },
+    {
+      "id": "video-1793917153243-6cvhlf",
+      "title": "Manabí y su Gastronomía: Patrimonio Cultural del Ecuador",
+      "description": "Descubre la riqueza cultural y gastronómica de Manabí, una provincia que representa el orgullo y la identidad del Ecuador. Su cocina tradicional destaca por el uso de ingredientes autóctonos como el plátano verde, maní, yuca, maíz y productos del mar, que dan vida a deliciosos platos como el ceviche, la tonga, el viche, el corviche y el tradicional bollo de pescado. Conoce las costumbres, técnicas ancestrales y secretos culinarios transmitidos de generación en generación, que convierten a la gastronomía manabita en una expresión invaluable del patrimonio cultural ecuatoriano.",
+      "platform": "youtube",
+      "url": "https://youtube.com/watch?v=3mj-lsVqoEc&feature=shared",
+      "videoId": "3mj-lsVqoEc",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/3mj-lsVqoEc",
+      "section": "results",
+      "order": 2
+    },
+    {
+      "id": "video-1793917282236-qjoff0",
+      "title": "Cantón Santo Domingo de los Tsáchilas",
+      "description": "Descubre Santo Domingo, un cantón lleno de diversidad cultural, riqueza natural y oportunidades económicas, ubicado en el corazón de la región noroccidental del Ecuador. Conoce la historia y las tradiciones del pueblo indígena Tsáchila, reconocido por su identidad ancestral, vestimenta tradicional y conocimientos sobre plantas medicinales. Explora sus atractivos turísticos, ríos, cascadas y paisajes naturales, así como sus principales actividades económicas relacionadas con la agricultura, ganadería, comercio y producción. Un recorrido por la cultura, naturaleza y desarrollo de una de las zonas más dinámicas del Ecuador.",
+      "platform": "youtube",
+      "url": "https://youtu.be/bJjqtxKTJqc?si=8PzcUewhZ07-RcP8",
+      "videoId": "bJjqtxKTJqc",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/bJjqtxKTJqc",
+      "section": "results",
+      "order": 3
+    },
+    {
+      "id": "video-1793917354186-yf7nbp",
+      "title": "Provincia de Los Ríos: Cultura, Agricultura y Tradiciones del Ecuador",
+      "description": "Descubre la provincia de Los Ríos, una región llena de riqueza natural, tradición agrícola y diversidad cultural, ubicada en el corazón de la región Costa del Ecuador. Conoce sus principales cantones, historia, costumbres y atractivos turísticos, así como su importancia económica en la producción de arroz, banano, cacao, maíz y otros productos agrícolas. Explora sus ríos, paisajes, gastronomía típica y festividades populares, que reflejan la identidad y el espíritu trabajador de su gente. Un recorrido por una de las provincias más importantes para el desarrollo agrícola y económico del Ecuador.",
+      "platform": "youtube",
+      "url": "https://youtu.be/65ebNADfLSo?si=Po5ED4RWPH3CopWm",
+      "videoId": "65ebNADfLSo",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/65ebNADfLSo",
+      "section": "results",
+      "order": 4
+    },
+    {
+      "id": "video-1793917435130-p8786g",
+      "title": "Provincia del Guayas y su Capital Guayaquil: Historia, Cultura y Desarrollo del Ecuador",
+      "description": "Descubre la provincia del Guayas y su emblemática capital, Guayaquil, una de las ciudades más importantes del Ecuador. Conoce su historia, tradiciones, patrimonio cultural y principales atractivos turísticos, como el Malecón 2000, el barrio Las Peñas y el Cerro Santa Ana. Explora su riqueza gastronómica, con platos tradicionales como el encebollado, el arroz con menestra y carne asada, el bolón de verde y el ceviche. Además, descubre su importancia económica y comercial como motor del desarrollo nacional, gracias a su actividad portuaria, industrial, agrícola y turística. Un recorrido por la identidad, el dinamismo y la riqueza cultural de Guayas.",
+      "platform": "youtube",
+      "url": "https://youtu.be/Z8BQ2E0v4lc?si=52TjAbGZBp9F1Xrw",
+      "videoId": "Z8BQ2E0v4lc",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/Z8BQ2E0v4lc",
+      "section": "results",
+      "order": 5
+    },
+    {
+      "id": "video-1793917503949-oe48um",
+      "title": "Provincia de Santa Elena: Playas, Cultura, Historia y Tradiciones del Ecuador",
+      "description": "Descubre la provincia de Santa Elena, un destino lleno de historia, riqueza cultural y belleza natural, ubicado en la costa ecuatoriana. Conoce sus hermosas playas, como Salinas, Montañita y Ayangue, así como su patrimonio arqueológico y las tradiciones de sus comunidades ancestrales. Explora su gastronomía típica, donde destacan los ceviches, encebollados, cazuelas de mariscos y platos elaborados con productos frescos del océano Pacífico. Además, descubre sus principales actividades económicas, como el turismo, la pesca, el comercio y la artesanía. Un recorrido por los paisajes, sabores y costumbres que hacen de Santa Elena una provincia única del Ecuador.",
+      "platform": "youtube",
+      "url": "https://youtube.com/watch?v=Q1aDvIwhYbM&feature=shared",
+      "videoId": "Q1aDvIwhYbM",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/Q1aDvIwhYbM",
+      "section": "results",
+      "order": 6
+    },
+    {
+      "id": "video-1793917586194-7es99i",
+      "title": "Provincia de El Oro: Riqueza Natural, Cultura, Economía y Tradiciones del Ecuador",
+      "description": "Descubre la provincia de El Oro, una región llena de historia, diversidad natural y riqueza productiva, ubicada en el sur de la costa ecuatoriana. Conoce sus principales cantones, atractivos turísticos y tradiciones culturales, así como su importancia económica en la producción y exportación de banano, camarón, cacao y otros productos agrícolas. Explora lugares emblemáticos como Puerto Bolívar, Zaruma, las playas de Jambelí y los paisajes naturales de la región. Disfruta de su variada gastronomía, donde destacan los tigrillos, ceviches, mariscos y platos tradicionales. Un recorrido por la identidad, el desarrollo y los sabores que hacen de El Oro una provincia fundamental para el Ecuador.",
+      "platform": "youtube",
+      "url": "https://youtu.be/dNe3hWHLw_4?si=ThEcomlnUq978_Mr",
+      "videoId": "dNe3hWHLw_4",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/dNe3hWHLw_4",
+      "section": "results",
+      "order": 7
+    }
+  ],
+  "resourceConfig": {
+    "mode": "local",
+    "rawBaseUrl": ""
+  }
+}

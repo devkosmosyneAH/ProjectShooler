@@ -4,6 +4,7 @@ import {
   MAX_PDF_SIZE,
   createEmptyProject,
   extractProjectFromText,
+  hydrateProjectFromFiles,
   validateProject,
   buildPagesUrl,
 } from "./utils/projectData";
@@ -107,15 +108,19 @@ function PublicClientView({ hash }) {
       });
       try {
         const manifestResponse = await fetch(publicDocumentUrl());
-        if (!manifestResponse.ok)
+        let projects;
+        if (manifestResponse.status === 404) {
+          projects = [{ file: "proyecto.json", title: "Proyecto escolar" }];
+        } else if (!manifestResponse.ok) {
           throw new Error(
             "No se pudo cargar el índice de proyectos publicados.",
           );
-        const manifest = await manifestResponse.json();
-        if (!Array.isArray(manifest.projects))
-          throw new Error("El índice de proyectos no tiene un formato válido.");
-
-        const projects = manifest.projects;
+        } else {
+          const manifest = await manifestResponse.json();
+          if (!Array.isArray(manifest.projects))
+            throw new Error("El índice de proyectos no tiene un formato válido.");
+          projects = manifest.projects;
+        }
         const requestedFile = new URLSearchParams(hash.split("?")[1] || "").get(
           "project",
         );
@@ -155,7 +160,33 @@ function PublicClientView({ hash }) {
         const projectResponse = await fetch(publicDocumentUrl(selected.file));
         if (!projectResponse.ok)
           throw new Error(`No se pudo cargar ${selected.file}.`);
-        const project = await projectResponse.json();
+        let project = await projectResponse.json();
+        if (project.content && typeof project.content === "object") {
+          const documents = await Promise.all(
+            Object.entries(project.content).map(async ([key, fileName]) => {
+              if (
+                typeof fileName !== "string" ||
+                !/^[a-zA-Z0-9._-]+\.json$/i.test(fileName)
+              ) {
+                throw new Error(
+                  `La referencia JSON "${key}" no contiene un nombre de archivo seguro.`,
+                );
+              }
+              const resourceUrl =
+                project.resourceConfig?.mode === "github-raw"
+                  ? resolveRawResourceUrl(
+                      project.resourceConfig.rawBaseUrl,
+                      `data/${fileName}`,
+                    )
+                  : publicDocumentUrl(fileName);
+              const response = await fetch(resourceUrl);
+              if (!response.ok)
+                throw new Error(`No se pudo cargar ${fileName}.`);
+              return [key, await response.json()];
+            }),
+          );
+          project = hydrateProjectFromFiles(project, Object.fromEntries(documents));
+        }
         if (
           (!Array.isArray(project.media) || project.media.length === 0) &&
           selected.images?.length
@@ -990,6 +1021,59 @@ function App() {
       delete next[imagePath];
       return next;
     });
+  };
+
+  const replaceImageFile = async (imageKey, event) => {
+    const [file] = Array.from(event.target.files || []);
+    event.target.value = "";
+    if (!file) return;
+    const validationErrors = validateImageFiles([file]);
+    if (validationErrors.length) {
+      setError(validationErrors.join(" "));
+      return;
+    }
+
+    const image = project.media.find(
+      (item) => (item.id || item.path) === imageKey,
+    );
+    if (!image) {
+      setError("No se encontró la imagen que deseas reemplazar.");
+      return;
+    }
+    try {
+      const extension = file.name.match(/\.(?:jpe?g|png|webp)$/i)?.[0].toLowerCase();
+      const baseName =
+        file.name
+          .slice(0, -extension.length)
+          .replace(/[^a-zA-Z0-9_-]/g, "-")
+          .replace(/^-+|-+$/g, "") || "imagen";
+      const path = `images/proyecto/${image.id || uniqueMediaId("image")}-${baseName}${extension}`;
+      const preview = await fileAsDataUrl(file);
+      setImageFiles((current) => {
+        const next = { ...current };
+        delete next[image.path];
+        next[path] = file;
+        return next;
+      });
+      updateProject((current) => ({
+        ...current,
+        media: current.media.map((item) =>
+          (item.id || item.path) === imageKey
+            ? {
+                ...item,
+                name: file.name,
+                path,
+                source: "local",
+                preview,
+                visualReviewRequired: true,
+                visualReviewed: false,
+              }
+            : item,
+        ),
+      }));
+    } catch (replacementError) {
+      setError(`No se pudo reemplazar la imagen: ${replacementError.message}`);
+    }
   };
 
   const exportJson = () => {
@@ -2045,6 +2129,17 @@ function App() {
                             })
                           }
                           placeholder="Descripción revisada"
+                        />
+                      </label>
+                      <label>
+                        Reemplazar imagen (conserva el OCR)
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                          aria-label={`Reemplazar imagen ${image.title || image.name} (conserva el OCR)`}
+                          onChange={(event) =>
+                            replaceImageFile(imageKey, event)
+                          }
                         />
                       </label>
                       <label>
