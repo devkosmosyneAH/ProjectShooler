@@ -658,6 +658,51 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .infographic-data-card th { background: #eaf0e8; }
 .project-infographic .empty-state { margin: 0; border: 1px dashed #d8ddc8; border-radius: 13px; background: #fafaf4; font-size: 13px; }
 .project-infographic [id] { scroll-margin-top: 72px; }
+.developer-credit {
+  padding: clamp(24px, 4vw, 42px) clamp(20px, 5vw, 54px);
+  background: #203d32;
+  color: #fffdf0;
+}
+.developer-credit-inner {
+  display: flex;
+  max-width: 880px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 0 auto;
+}
+.developer-credit-kicker {
+  margin: 0 0 7px;
+  color: #d7dd76;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.developer-credit-title { margin: 0 0 3px; color: #d2dbd0; font-size: 12px; }
+.developer-credit-inner strong {
+  color: #fffdf0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 23px;
+  letter-spacing: -.025em;
+}
+.developer-links { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 9px; }
+.developer-links a {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 12px;
+  border: 1px solid rgb(239 240 106 / 30%);
+  border-radius: 999px;
+  color: #f0efcf;
+  font-size: 11px;
+  text-decoration: none;
+  transition: color .18s ease, background .18s ease, border-color .18s ease;
+}
+.developer-links a:hover { border-color: #eff06a; background: #eff06a; color: #243d31; }
+.developer-links a span { color: #d7dd76; }
+.developer-links a:hover span { color: #243d31; }
 
 @media (max-width: 620px) {
   .client-view { padding: 10px; }
@@ -679,8 +724,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .chapter-marker { width: 38px; height: 38px; border-width: 3px; font-size: 13px; }
   .chapter-card, .infographic-data-card { padding: 18px; border-radius: 12px; }
   .chapter-card h2, .infographic-data-card h2, .infographic-extra > h2 { font-size: 23px; }
+  .developer-credit-inner { align-items: flex-start; flex-direction: column; gap: 18px; }
+  .developer-links { justify-content: flex-start; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .infographic-toc a { transition: none; }
+  .infographic-toc a, .developer-links a { transition: none; }
 }

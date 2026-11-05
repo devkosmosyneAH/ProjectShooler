@@ -62,6 +62,15 @@ describe('static site and JSON exports', () => {
     expect(root.textContent).toContain('Introducción visible');
     expect(root.textContent).toContain('Conclusión de prueba');
     expect(root.textContent).toContain('Recomendación de prueba');
+    expect(root.querySelector('.developer-credit').textContent).toContain('Cordova Anthony');
+    const developerLinks = [...root.querySelectorAll('.developer-links a')];
+    expect(developerLinks.map((link) => link.href)).toEqual([
+      'https://devkosmosyneah.github.io/devkosmosyne-website/',
+      'https://github.com/18-anth',
+      'https://18-anth.github.io/CV_Anth/',
+      'https://www.linkedin.com/in/anthony-c-a12928111/',
+    ]);
+    expect(developerLinks.every((link) => link.target === '_blank' && link.rel === 'noopener noreferrer')).toBe(true);
     expect(globalThis.fetch).toHaveBeenCalledWith('./data/proyecto.json');
   });
 

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import './App.css';
 import { MAX_PDF_SIZE, createEmptyProject, extractProjectFromText, validateProject, buildPagesUrl } from './utils/projectData';
+import { DEVELOPER_PROFILE } from './utils/developerProfile';
 import { ActionButton, Icon, Surface } from './components/Primitives';
 
 const navigation = [
@@ -249,6 +250,20 @@ function PublicPreview({ project, hideEmpty = true, mediaSrc = (media) => media.
           {remainingMedia.map((image) => <figure key={image.path}><img src={mediaSrc(image)} alt={image.alt || image.name} loading="lazy" /><figcaption>{image.alt || image.name}</figcaption></figure>)}
         </div></section>}
       </div>
+      <footer className="developer-credit">
+        <div className="developer-credit-inner">
+          <div>
+            <p className="developer-credit-kicker">Créditos</p>
+            <p className="developer-credit-title">Desarrollado por</p>
+            <strong>{DEVELOPER_PROFILE.name}</strong>
+          </div>
+          <nav className="developer-links" aria-label="Enlaces del desarrollador">
+            {DEVELOPER_PROFILE.links.map(({ label, href }) => (
+              <a href={href} key={href} target="_blank" rel="noopener noreferrer">{label}<span aria-hidden="true">↗</span></a>
+            ))}
+          </nav>
+        </div>
+      </footer>
     </div>
   );
 }

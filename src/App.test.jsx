@@ -148,6 +148,12 @@ test("renders only the public project at the View hash route", async () => {
   expect(screen.getByRole("link", { name: "Introducción" })).toHaveAttribute("href", "#project-section-introduction");
   expect(screen.getByText("Contenido real de introducción")).toBeInTheDocument();
   expect(screen.getByAltText("foto.png")).toBeInTheDocument();
+  expect(screen.getByText("Cordova Anthony")).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: /Página web/ })).toHaveAttribute("href", "https://devkosmosyneah.github.io/devkosmosyne-website/");
+  expect(screen.getByRole("link", { name: /GitHub/ })).toHaveAttribute("href", "https://github.com/18-anth");
+  expect(screen.getByRole("link", { name: /^CV/ })).toHaveAttribute("href", "https://18-anth.github.io/CV_Anth/");
+  expect(screen.getByRole("link", { name: /LinkedIn/ })).toHaveAttribute("href", "https://www.linkedin.com/in/anthony-c-a12928111/");
+  expect(screen.getByRole("link", { name: /GitHub/ })).toHaveAttribute("rel", "noopener noreferrer");
   expect(
     screen.queryByRole("navigation", { name: /navegación principal/i }),
   ).not.toBeInTheDocument();
