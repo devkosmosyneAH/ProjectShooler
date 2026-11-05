@@ -718,6 +718,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+.project-rich-content { display: grid; gap: 14px; }
+.project-rich-content > p { margin: 0; color: #526355; font-size: 13px; line-height: 1.85; white-space: pre-wrap; overflow-wrap: anywhere; }
+.project-inline-image { display: grid; justify-items: start; gap: 7px; margin: 4px 0 8px; }
+.project-inline-image img { display: block; width: min(100%, 680px); max-height: 520px; object-fit: contain; object-position: left center; border: 1px solid #e8e7dc; border-radius: 12px; background: #fff; }
+.project-inline-image figcaption { color: #687365; font-size: 12px; line-height: 1.5; }
 .chapter-card ul, .infographic-data-card ul, .infographic-data-card ol { display: grid; gap: 10px; margin: 12px 0 0; padding-left: 20px; color: #526355; font-size: 13px; line-height: 1.75; }
 .chapter-card li::marker, .infographic-data-card li::marker { color: #899744; }
 .infographic-extra > h2 { margin-bottom: 16px; }

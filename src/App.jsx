@@ -87,6 +87,113 @@ function publicDocumentUrl(fileName = "") {
   return new URL(path, baseUrl);
 }
 
+function getContentImageSource(source) {
+  const cleanedSource = source.replace(/[.,;]+$/, "");
+  try {
+    const url = new URL(cleanedSource, window.location.origin);
+    if (
+      !["http:", "https:"].includes(url.protocol) ||
+      url.username ||
+      url.password ||
+      !/\.(?:avif|gif|jpe?g|png|webp)$/i.test(url.pathname)
+    ) {
+      return null;
+    }
+    if (!/^https?:\/\//i.test(cleanedSource)) {
+      if (cleanedSource.split(/[?#]/, 1)[0].split("/").includes(".."))
+        return null;
+      const localPath = decodeURIComponent(url.pathname);
+      if (
+        localPath.split("/").some((part) => part === "." || part === "..") ||
+        !/(?:^|\/)(?:documents\/)?images\//i.test(localPath)
+      ) {
+        return null;
+      }
+    }
+    return cleanedSource;
+  } catch {
+    return null;
+  }
+}
+
+function ProjectSectionContent({ content, media = [], mediaSrc, documentFile }) {
+  const blocks = [];
+  let textLines = [];
+  const flushText = () => {
+    if (textLines.some((line) => line.trim())) {
+      blocks.push({ type: "text", content: textLines.join("\n") });
+    }
+    textLines = [];
+  };
+  const appendImage = (source, label, key) => {
+    const image = media.find((item) => item.path === source);
+    let src = image ? mediaSrc(image) : source;
+    if (!image && !/^https?:\/\//i.test(source)) {
+      const localPath = source.replace(/^\.?\//, "").replace(/^documents\//, "");
+      src = new URL(
+        localPath.split("/").map(encodeURIComponent).join("/"),
+        publicDocumentUrl(documentFile),
+      ).href;
+    }
+    blocks.push({
+      type: "image",
+      key,
+      src,
+      alt: label,
+      caption: label,
+    });
+  };
+
+  content.split("\n").forEach((line, lineIndex) => {
+    if (!line.trim()) {
+      flushText();
+      return;
+    }
+    const pattern =
+      /!\[([^\]]*)\]\(([^)\s]+)\)|(https?:\/\/[^\s)]+|(?:\.{0,2}\/)?(?:documents\/)?images\/[^\s)]+)/gi;
+    let lastIndex = 0;
+    let foundImage = false;
+    let match;
+    while ((match = pattern.exec(line)) !== null) {
+      const source = getContentImageSource(match[2] || match[3]);
+      if (!source) continue;
+      const prefix = line.slice(lastIndex, match.index);
+      const label =
+        (match[1] || prefix)
+          .replace(/^\s*[-*•]\s*/, "")
+          .replace(/[\s:–—-]+$/, "")
+          .trim();
+      if (prefix.trim()) textLines.push(prefix.trim());
+      flushText();
+      appendImage(source, label, `${lineIndex}-${match.index}`);
+      lastIndex = pattern.lastIndex;
+      foundImage = true;
+    }
+    if (foundImage) {
+      const suffix = line.slice(lastIndex).trim();
+      if (suffix) textLines.push(suffix);
+    } else {
+      textLines.push(line);
+    }
+  });
+  flushText();
+
+  return (
+    <div className="project-rich-content">
+      {blocks.map((block, index) =>
+        block.type === "image" ? (
+          <figure className="project-inline-image" key={block.key}>
+            <img src={block.src} alt={block.alt} loading="lazy" decoding="async" />
+            {block.caption && <figcaption>{block.caption}</figcaption>}
+          </figure>
+        ) : (
+          <p key={`text-${index}`}>{block.content}</p>
+        ),
+      )}
+    </div>
+  );
+}
+
 function PublicClientView({ hash }) {
   const [view, setView] = useState({
     loading: true,
@@ -298,7 +405,11 @@ function PublicClientView({ hash }) {
   };
   return (
     <main className="client-view">
-      <PublicPreview project={view.project} mediaSrc={mediaSrc} />
+      <PublicPreview
+        project={view.project}
+        mediaSrc={mediaSrc}
+        documentFile={view.file}
+      />
     </main>
   );
 }
@@ -319,6 +430,7 @@ function PublicPreview({
   project,
   hideEmpty = true,
   mediaSrc = (media) => media.preview || media.path,
+  documentFile = "",
 }) {
   const [lightboxIndex, setLightboxIndex] = useState(null);
   const lightboxRef = useRef(null);
@@ -504,7 +616,14 @@ function PublicPreview({
                 <div className="chapter-card">
                   <p className="chapter-kicker">{chapter.label}</p>
                   <h2>{chapter.title}</h2>
-                  {chapter.content && <p>{chapter.content}</p>}
+                  {chapter.content && (
+                    <ProjectSectionContent
+                      content={chapter.content}
+                      media={project.media}
+                      mediaSrc={mediaSrc}
+                      documentFile={documentFile}
+                    />
+                  )}
                   {chapter.listTitle && <h3>{chapter.listTitle}</h3>}
                   {chapter.items?.length > 0 && (
                     <ul>

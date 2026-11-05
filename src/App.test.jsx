@@ -171,6 +171,42 @@ test("renders only the public project at the View hash route", async () => {
   );
 });
 
+test("renders image URLs embedded in the public development section", async () => {
+  const project = createEmptyProject();
+  project.projectId = "proyecto-con-imagen-en-texto";
+  project.title = "Proyecto con imágenes";
+  const development = project.sections.find(
+    (section) => section.id === "development",
+  );
+  development.content =
+    "Descripción de la provincia.\n\nImágenes:\n- Marimba esmeraldeña: https://example.com/marimba.jpg?size=large";
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url) => {
+      if (String(url).endsWith("/documents/index.json")) {
+        return {
+          ok: true,
+          json: async () => ({
+            projects: [{ file: "proyecto.json", title: project.title }],
+          }),
+        };
+      }
+      return { ok: true, json: async () => project };
+    }),
+  );
+  window.location.hash = "#/view/";
+
+  render(<App />);
+
+  const image = await screen.findByAltText("Marimba esmeraldeña");
+  expect(image).toHaveAttribute(
+    "src",
+    "https://example.com/marimba.jpg?size=large",
+  );
+  expect(screen.getByText("Marimba esmeraldeña")).toBeInTheDocument();
+  expect(screen.getByText("Descripción de la provincia.")).toBeInTheDocument();
+});
+
 test("hydrates the separated project JSON files in the public View route", async () => {
   const project = createEmptyProject();
   project.projectId = "proyecto-dividido";
