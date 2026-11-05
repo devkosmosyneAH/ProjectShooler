@@ -32,6 +32,21 @@ export function validateImageFiles(files) {
     .filter(Boolean);
 }
 
+export function isValidExternalImageUrl(value) {
+  if (typeof value !== "string" || !value.trim()) return false;
+  try {
+    const url = new URL(value);
+    return (
+      url.protocol === "https:" &&
+      !url.username &&
+      !url.password &&
+      !url.port
+    );
+  } catch {
+    return false;
+  }
+}
+
 function classifyOcrLines(text) {
   const lines = text
     .split(/\n+/)

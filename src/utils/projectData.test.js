@@ -174,6 +174,36 @@ describe("project extraction and JSON model", () => {
       "Configura una URL HTTPS válida de raw.githubusercontent.com para cargar los JSON externos.",
     );
   });
+
+  test("accepts direct HTTPS image URLs in multimedia metadata", () => {
+    const project = createEmptyProject();
+    project.media = [
+      {
+        id: "image-local",
+        title: "Imagen local",
+        name: "local.jpg",
+        alt: "Imagen local",
+        path: "images/proyecto/local.jpg",
+        source: "local",
+        order: 1,
+      },
+      {
+        id: "image-external",
+        title: "Imagen de internet",
+        name: "external.jpg",
+        alt: "Imagen externa",
+        path: "https://images.example.org/document/1?v=1",
+        source: "local",
+        order: 2,
+      },
+    ];
+
+    expect(validateProject(project)).toEqual([]);
+    project.media[1].path = "http://images.example.org/photo.jpg";
+    expect(validateProject(project)).toContain(
+      "Cada imagen debe tener metadatos y una ruta HTTPS segura, local o relativa a GitHub Raw configurado.",
+    );
+  });
 });
 
 describe("GitHub Pages URL builder", () => {

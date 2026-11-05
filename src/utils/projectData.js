@@ -1,4 +1,8 @@
-import { isValidGitHubRawBaseUrl, parseYouTubeUrl } from "./multimedia";
+import {
+  isValidExternalImageUrl,
+  isValidGitHubRawBaseUrl,
+  parseYouTubeUrl,
+} from "./multimedia";
 
 export const MAX_PDF_SIZE = 50 * 1024 * 1024;
 export const SECTION_DEFINITIONS = [
@@ -383,12 +387,14 @@ export function validateProject(project) {
         typeof media.name !== "string" ||
         typeof media.alt !== "string" ||
         typeof media.path !== "string" ||
-        media.path.includes("..")
+        (/^https?:\/\//i.test(media.path)
+          ? !isValidExternalImageUrl(media.path)
+          : media.path.includes(".."))
       )
         return true;
       if (
         media.source !== undefined &&
-        !["local", "github-raw"].includes(media.source)
+        !["local", "github-raw", "external"].includes(media.source)
       )
         return true;
       if (
@@ -429,6 +435,8 @@ export function validateProject(project) {
           !project.sections.some((section) => section.id === media.section))
       )
         return true;
+      if (isValidExternalImageUrl(media.path)) return false;
+      if (media.source === "external") return true;
       if (media.source === "github-raw") {
         return (
           !isValidGitHubRawBaseUrl(project.resourceConfig?.rawBaseUrl) ||
@@ -449,7 +457,7 @@ export function validateProject(project) {
     })
   ) {
     errors.push(
-      "Cada imagen debe tener metadatos y una ruta local segura o una ruta relativa a GitHub Raw configurado.",
+      "Cada imagen debe tener metadatos y una ruta HTTPS segura, local o relativa a GitHub Raw configurado.",
     );
   }
   if (

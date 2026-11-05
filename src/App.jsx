@@ -14,6 +14,7 @@ import YouTubePlayer from "./components/YouTubePlayer";
 import {
   analyzeImageFiles,
   isValidGitHubRawBaseUrl,
+  isValidExternalImageUrl,
   normalizeGitHubRawBaseUrl,
   parseYouTubeUrl,
   resolveRawResourceUrl,
@@ -392,6 +393,7 @@ function PublicClientView({ hash }) {
 
   const mediaSrc = (media) => {
     if (media.preview) return media.preview;
+    if (isValidExternalImageUrl(media.path)) return media.path;
     if (media.source === "github-raw")
       return resolveRawResourceUrl(
         view.project.resourceConfig?.rawBaseUrl,
@@ -2166,7 +2168,9 @@ function App() {
               const imageKey = image.id || image.path;
               const preview =
                 image.preview ||
-                (image.source === "github-raw" &&
+                (isValidExternalImageUrl(image.path)
+                  ? image.path
+                  : image.source === "github-raw" &&
                 isValidGitHubRawBaseUrl(project.resourceConfig?.rawBaseUrl)
                   ? resolveRawResourceUrl(
                       project.resourceConfig.rawBaseUrl,
@@ -2397,8 +2401,30 @@ function App() {
                           <option value="github-raw">
                             GitHub Raw · ruta relativa a la URL base
                           </option>
+                          <option value="external">
+                            URL HTTPS de imagen pública
+                          </option>
                         </select>
                       </label>
+                      {image.source === "external" && (
+                        <label>
+                          URL HTTPS de imagen
+                          <input
+                            type="url"
+                            value={image.path}
+                            onChange={(event) =>
+                              updateImage(imageKey, {
+                                path: event.target.value,
+                              })
+                            }
+                            placeholder="https://sitio.example/imagen.jpg"
+                          />
+                          <small>
+                            Usa una URL HTTPS pública de imagen. Se admiten
+                            enlaces de CDN sin extensión de archivo.
+                          </small>
+                        </label>
+                      )}
                       {image.source === "github-raw" && (
                         <label>
                           Ruta relativa en GitHub Raw

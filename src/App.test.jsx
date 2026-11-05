@@ -171,6 +171,60 @@ test("renders only the public project at the View hash route", async () => {
   );
 });
 
+test("renders direct internet image paths from multimedia in the public gallery", async () => {
+  const project = createEmptyProject();
+  project.projectId = "proyecto-galeria-remota";
+  project.title = "Proyecto con galería remota";
+  project.media = [
+    {
+      id: "image-cover",
+      title: "Portada",
+      name: "portada.jpg",
+      alt: "Portada del proyecto",
+      path: "images/proyecto/portada.jpg",
+      source: "local",
+      order: 1,
+      featured: false,
+    },
+    {
+      id: "image-online",
+      title: "Imagen OCR en internet",
+      name: "imagen.jpg",
+      alt: "Imagen OCR alojada en internet",
+      path: "https://images.example.org/region/1?width=900",
+      source: "local",
+      order: 2,
+      featured: false,
+      ocrText: "Texto que se conservó del OCR",
+      ocrConfidence: 90,
+    },
+  ];
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url) => {
+      if (String(url).endsWith("/documents/index.json")) {
+        return {
+          ok: true,
+          json: async () => ({
+            projects: [{ file: "proyecto.json", title: project.title }],
+          }),
+        };
+      }
+      return { ok: true, json: async () => project };
+    }),
+  );
+  window.location.hash = "#/view/";
+
+  render(<App />);
+
+  const image = await screen.findByAltText("Imagen OCR alojada en internet");
+  expect(image).toHaveAttribute(
+    "src",
+    "https://images.example.org/region/1?width=900",
+  );
+  expect(screen.getByText("Imagen OCR en internet")).toBeInTheDocument();
+});
+
 test("renders image URLs embedded in the public development section", async () => {
   const project = createEmptyProject();
   project.projectId = "proyecto-con-imagen-en-texto";

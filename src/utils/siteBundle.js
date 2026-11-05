@@ -9,7 +9,7 @@ const resourceConfig = ${JSON.stringify(resourceConfig)};
 const rawBaseUrl = resourceConfig.rawBaseUrl ? resourceConfig.rawBaseUrl.replace(/\\/+$/, '') + '/' : '';
 const rawResourceUrl = path => new URL(path.split('/').map(encodeURIComponent).join('/'), rawBaseUrl).href;
 const dataUrl = name => resourceConfig.mode === 'github-raw' ? rawResourceUrl('data/' + name) : './data/' + name;
-const imageUrl = image => image.source === 'github-raw' ? rawResourceUrl(image.path) : './' + image.path;
+const imageUrl = image => /^https:\\/\\//i.test(image.path) ? image.path : image.source === 'github-raw' ? rawResourceUrl(image.path) : './' + image.path;
 const el = (tag, text, className) => {
   const node = document.createElement(tag);
   if (text !== undefined) node.textContent = text;
@@ -299,7 +299,11 @@ const publicHtml = `<!doctype html>
 
 function assertBundledImages(project, imageFiles) {
   for (const image of project.media) {
-    if (image.source === "github-raw") continue;
+    if (
+      image.source === "github-raw" ||
+      /^https:\/\//i.test(image.path)
+    )
+      continue;
     if (!imageFiles[image.path]) {
       throw new Error(
         `Falta el archivo local de la imagen "${image.title || image.name}": ${image.path}. No se exportaron referencias rotas.`,
@@ -310,7 +314,7 @@ function assertBundledImages(project, imageFiles) {
 
 function addLocalImages(zip, project, imageFiles) {
   for (const image of project.media) {
-    if (image.source !== "github-raw")
+    if (image.source !== "github-raw" && !/^https:\/\//i.test(image.path))
       zip.file(`public/${image.path}`, imageFiles[image.path]);
   }
 }

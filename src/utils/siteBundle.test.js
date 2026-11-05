@@ -232,6 +232,47 @@ describe("static site and JSON exports", () => {
     );
   });
 
+  test("exports internet-hosted image paths without treating them as local ZIP files", async () => {
+    const project = sampleProject();
+    project.media = [
+      {
+        id: "image-online",
+        title: "Imagen externa",
+        description: "Imagen pública",
+        name: "imagen.jpg",
+        alt: "Imagen alojada en internet",
+        path: "https://images.example.org/photo.jpg?width=900",
+        source: "local",
+        section: "introduction",
+        order: 1,
+        featured: false,
+        ocrText: "Texto OCR",
+      },
+    ];
+    const archive = await JSZip.loadAsync(await createSiteZip(project));
+    const files = createProjectFiles(project);
+    globalThis.fetch = vi.fn(async (url) => ({
+      ok: Boolean(files[url.replace("./data/", "")]),
+      json: async () => JSON.parse(files[url.replace("./data/", "")]),
+    }));
+    document.body.innerHTML = '<div id="project"></div>';
+    const runtime = await archive.file("public/app.js").async("string");
+    const execute = new Function(
+      runtime.replace(/\nloadProject\(\);\s*$/, "\nreturn loadProject();"),
+    );
+
+    await execute();
+
+    expect(document.querySelector(".gallery img")).toHaveAttribute(
+      "src",
+      "https://images.example.org/photo.jpg?width=900",
+    );
+    expect(archive.file("public/https:/images.example.org/photo.jpg")).toBeNull();
+    expect(JSON.parse(files["multimedia.json"]).images[0].ocrText).toBe(
+      "Texto OCR",
+    );
+  });
+
   test("loads JSON from an explicitly configured GitHub Raw base without rewriting Pages URLs", async () => {
     const project = sampleProject();
     project.resourceConfig = {
