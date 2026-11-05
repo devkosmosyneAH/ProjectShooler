@@ -171,44 +171,83 @@ function PageHeader({ eyebrow, title, description }) {
 
 function PublicPreview({ project, hideEmpty = true, mediaSrc = (media) => media.preview || media.path }) {
   const visibleSections = project.sections.filter((section) => !hideEmpty || section.content.trim());
-  const hasGoals = project.objectives.general || project.objectives.specific.some(Boolean);
-  const hasContent = project.summary || hasGoals || visibleSections.length || project.conclusions.some(Boolean) || project.recommendations.some(Boolean) || project.references.some(Boolean) || project.media.length;
+  const specificObjectives = project.objectives.specific.filter(Boolean);
+  const conclusions = project.conclusions.filter(Boolean);
+  const recommendations = project.recommendations.filter(Boolean);
+  const references = project.references.filter(Boolean);
+  const hasGoals = project.objectives.general || specificObjectives.length;
+  const hasContent = project.description || project.summary || hasGoals || visibleSections.length || project.tables.length || conclusions.length || recommendations.length || references.length || project.media.length;
+  const chapters = [
+    ...(project.summary ? [{ id: 'project-summary', label: 'Resumen', title: 'El proyecto en breve', content: project.summary }] : []),
+    ...(hasGoals ? [{
+      id: 'project-objectives',
+      label: 'Objetivos',
+      title: 'Objetivo general',
+      content: project.objectives.general,
+      listTitle: specificObjectives.length ? 'Objetivos específicos' : '',
+      items: specificObjectives,
+    }] : []),
+    ...visibleSections.map((section) => ({
+      id: `project-section-${section.id}`,
+      label: section.title,
+      title: section.title,
+      content: section.content || 'Contenido pendiente de revisión.',
+    })),
+  ];
+  const firstMedia = project.media[0];
+  const remainingMedia = project.media.slice(firstMedia ? 1 : 0);
+  const pageLinks = [
+    ...chapters.map(({ id, label }) => ({ id, label })),
+    ...(project.tables.length ? [{ id: 'project-tables', label: 'Tablas' }] : []),
+    ...(conclusions.length ? [{ id: 'project-conclusions', label: 'Conclusiones' }] : []),
+    ...(recommendations.length ? [{ id: 'project-recommendations', label: 'Recomendaciones' }] : []),
+    ...(references.length ? [{ id: 'project-references', label: 'Referencias' }] : []),
+    ...(remainingMedia.length ? [{ id: 'project-gallery', label: 'Galería' }] : []),
+  ];
   return (
-    <div className="public-preview">
-      <header className="preview-hero">
-        <p className="eyebrow">{project.institution || 'Proyecto escolar'}</p>
-        <h2>{project.title || 'Título del proyecto'}</h2>
-        {project.description && <p>{project.description}</p>}
-        {!project.description && project.summary && <p>{project.summary}</p>}
-        {project.authors.length > 0 && <span className="preview-byline">Por {project.authors.map((author) => author.name).filter(Boolean).join(', ')}</span>}
+    <div className="public-preview project-infographic">
+      <div className="infographic-masthead"><span className="infographic-brand">Aula<span>.</span></span><span>Proyecto escolar</span></div>
+      <header className="infographic-hero" id="project-start">
+        <div className="infographic-hero-copy">
+          <p className="infographic-institution">{project.institution || 'Proyecto escolar'}</p>
+          <p className="eyebrow">{project.extraction.pageCount > 0 ? `Documento fuente · ${project.extraction.pageCount} páginas` : 'Proyecto escolar'}</p>
+          <h1>{project.title || 'Proyecto escolar'}</h1>
+          {project.description && <p className="infographic-description">{project.description}</p>}
+          {project.authors.length > 0 && <p className="preview-byline">Por {project.authors.map((author) => author.name).filter(Boolean).join(', ')}</p>}
+        </div>
+        {firstMedia ? (
+          <figure className="infographic-cover">
+            <img src={mediaSrc(firstMedia)} alt={firstMedia.alt || firstMedia.name} />
+            {(firstMedia.alt || firstMedia.name) && <figcaption>{firstMedia.alt || firstMedia.name}</figcaption>}
+          </figure>
+        ) : (
+          <div className="infographic-art" aria-hidden="true"><span /><span /><span /></div>
+        )}
       </header>
-      <div className="preview-content">
+      {pageLinks.length > 0 && <nav className="infographic-toc" aria-label="Secciones del proyecto">{pageLinks.map(({ id, label }) => <a href={`#${id}`} key={id}>{label}</a>)}</nav>}
+      <div className="infographic-content">
         {!hasContent && <p className="empty-state">Todavía no hay contenido para mostrar. Importa un PDF o completa el editor.</p>}
-        {project.objectives.general && <article className="preview-card"><h3>Objetivo general</h3><p>{project.objectives.general}</p></article>}
-        {project.objectives.specific.filter(Boolean).length > 0 && (
-          <article className="preview-card"><h3>Objetivos específicos</h3><ul>{project.objectives.specific.filter(Boolean).map((objective, index) => <li key={index}>{objective}</li>)}</ul></article>
-        )}
-        {project.tables.map((table) => <article className="preview-card" key={table.id}><h3>{table.title}</h3><div className="table-scroll"><table><tbody>{table.rows.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, cellIndex) => rowIndex === 0 ? <th key={cellIndex} scope="col">{cell}</th> : <td key={cellIndex}>{cell}</td>)}</tr>)}</tbody></table></div></article>)}
-        {visibleSections.map((section) => (
-          <details className="preview-card" open key={section.id}>
-            <summary>{section.title}</summary>
-            <p>{section.content || 'Contenido pendiente de revisión.'}</p>
-          </details>
-        ))}
-        {project.conclusions.filter(Boolean).length > 0 && (
-          <article className="preview-card"><h3>Conclusiones</h3><ul>{project.conclusions.filter(Boolean).map((item, index) => <li key={index}>{item}</li>)}</ul></article>
-        )}
-        {project.recommendations.filter(Boolean).length > 0 && (
-          <article className="preview-card"><h3>Recomendaciones</h3><ul>{project.recommendations.filter(Boolean).map((item, index) => <li key={index}>{item}</li>)}</ul></article>
-        )}
-        {project.references.filter(Boolean).length > 0 && (
-          <article className="preview-card"><h3>Referencias</h3><ul>{project.references.filter(Boolean).map((item, index) => <li key={index}>{item}</li>)}</ul></article>
-        )}
-        {project.media.length > 0 && (
-          <article className="preview-card"><h3>Galería de imágenes</h3><div className="image-grid">
-            {project.media.map((image) => <figure key={image.path}><img src={mediaSrc(image)} alt={image.alt || image.name} /><figcaption>{image.alt || image.name}</figcaption></figure>)}
-          </div></article>
-        )}
+        {chapters.length > 0 && <section className="infographic-flow" aria-label="Contenido del proyecto">{chapters.map((chapter, index) => (
+          <article className="infographic-chapter" id={chapter.id} key={chapter.id}>
+            <div className="chapter-marker" aria-hidden="true">{String(index + 1).padStart(2, '0')}</div>
+            <div className="chapter-card">
+              <p className="chapter-kicker">{chapter.label}</p>
+              <h2>{chapter.title}</h2>
+              {chapter.content && <p>{chapter.content}</p>}
+              {chapter.listTitle && <h3>{chapter.listTitle}</h3>}
+              {chapter.items?.length > 0 && <ul>{chapter.items.map((item, itemIndex) => <li key={itemIndex}>{item}</li>)}</ul>}
+            </div>
+          </article>
+        ))}</section>}
+        {project.tables.length > 0 && <section className="infographic-extra" id="project-tables"><h2>Tablas del proyecto</h2><div className="infographic-data-grid">{project.tables.map((table) => <article className="infographic-data-card" key={table.id}><h3>{table.title}</h3><div className="table-scroll"><table><tbody>{table.rows.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, cellIndex) => rowIndex === 0 ? <th key={cellIndex} scope="col">{cell}</th> : <td key={cellIndex}>{cell}</td>)}</tr>)}</tbody></table></div></article>)}</div></section>}
+        {(conclusions.length > 0 || recommendations.length > 0) && <section className="infographic-data-grid">
+          {conclusions.length > 0 && <article className="infographic-data-card infographic-accent-peach" id="project-conclusions"><p className="chapter-kicker">Cierre</p><h2>Conclusiones</h2><ul>{conclusions.map((item, index) => <li key={index}>{item}</li>)}</ul></article>}
+          {recommendations.length > 0 && <article className="infographic-data-card infographic-accent-lilac" id="project-recommendations"><p className="chapter-kicker">Siguientes pasos</p><h2>Recomendaciones</h2><ul>{recommendations.map((item, index) => <li key={index}>{item}</li>)}</ul></article>}
+        </section>}
+        {references.length > 0 && <section className="infographic-data-card infographic-references" id="project-references"><p className="chapter-kicker">Fuentes consultadas</p><h2>Referencias</h2><ol>{references.map((item, index) => <li key={index}>{item}</li>)}</ol></section>}
+        {remainingMedia.length > 0 && <section className="infographic-gallery infographic-data-card" id="project-gallery"><p className="chapter-kicker">Material visual</p><h2>Galería del proyecto</h2><div className="image-grid">
+          {remainingMedia.map((image) => <figure key={image.path}><img src={mediaSrc(image)} alt={image.alt || image.name} loading="lazy" /><figcaption>{image.alt || image.name}</figcaption></figure>)}
+        </div></section>}
       </div>
     </div>
   );

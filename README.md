@@ -47,3 +47,5 @@ El ZIP generado publica el sitio estático del proyecto escolar, no el administr
 ## Interfaz
 
 El panel usa un sistema visual editorial de tonos marfil, verde bosque y acentos lima, implementado con variables CSS y sin dependencias de animación adicionales. Los componentes compartidos `Surface` y `ActionButton` admiten variantes y elemento semántico (`as`); las transiciones respetan `prefers-reduced-motion`.
+
+La ruta `#/view/` presenta el proyecto como una infografía adaptable: sus etapas se construyen con el resumen, los objetivos y las secciones existentes; las imágenes destacadas y la galería usan únicamente medios del proyecto. Los campos vacíos no generan contenido ficticio.

@@ -116,6 +116,7 @@ test("renders only the public project at the View hash route", async () => {
   const project = createEmptyProject();
   project.projectId = "proyecto-publico";
   project.title = "Proyecto para clientes";
+  project.sections[0].content = "Contenido real de introducción";
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url) => {
@@ -136,13 +137,17 @@ test("renders only the public project at the View hash route", async () => {
       return { ok: true, json: async () => project };
     }),
   );
-  window.location.hash = "#/View";
+  window.location.hash = "#/view/";
 
   render(<App />);
 
   expect(
     await screen.findByRole("heading", { name: project.title }),
   ).toBeInTheDocument();
+  expect(screen.getByRole("navigation", { name: /secciones del proyecto/i })).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Introducción" })).toHaveAttribute("href", "#project-section-introduction");
+  expect(screen.getByText("Contenido real de introducción")).toBeInTheDocument();
+  expect(screen.getByAltText("foto.png")).toBeInTheDocument();
   expect(
     screen.queryByRole("navigation", { name: /navegación principal/i }),
   ).not.toBeInTheDocument();
