@@ -200,6 +200,7 @@ export function validateProject(project) {
     if (['title', 'description', 'visualDescription', 'ocrText'].some((key) => media[key] !== undefined && typeof media[key] !== 'string')) return true;
     if (media.order !== undefined && (!Number.isInteger(media.order) || media.order < 1)) return true;
     if (media.featured !== undefined && typeof media.featured !== 'boolean') return true;
+    if (['ocrReviewRequired', 'ocrReviewed', 'visualReviewRequired', 'visualReviewed'].some((key) => media[key] !== undefined && typeof media[key] !== 'boolean')) return true;
     if (media.ocrConfidence !== undefined && media.ocrConfidence !== null && (typeof media.ocrConfidence !== 'number' || media.ocrConfidence < 0 || media.ocrConfidence > 100)) return true;
     if (media.section && (!Array.isArray(project.sections) || !project.sections.some((section) => section.id === media.section))) return true;
     if (media.source === 'github-raw') {

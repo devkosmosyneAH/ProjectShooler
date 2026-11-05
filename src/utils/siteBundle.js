@@ -221,7 +221,7 @@ async function loadProject() {
 function parseYouTube(value) {
   try {
     const url = new URL(value);
-    if (url.protocol !== 'https:' || url.username || url.password || !['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be', 'www.youtu.be'].includes(url.hostname)) return '';
+    if (url.protocol !== 'https:' || url.username || url.password || url.port || !['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be', 'www.youtu.be'].includes(url.hostname)) return '';
     let id = '';
     if (url.hostname.endsWith('youtu.be')) id = url.pathname.split('/').filter(Boolean)[0] || '';
     else if (url.pathname === '/watch') id = url.searchParams.get('v') || '';

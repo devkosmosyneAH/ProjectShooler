@@ -78,6 +78,7 @@ export function isValidGitHubRawBaseUrl(value) {
     const segments = url.pathname.split('/').filter(Boolean);
     return url.protocol === 'https:'
       && url.hostname === 'raw.githubusercontent.com'
+      && !url.port
       && !url.username
       && !url.password
       && !url.search
@@ -102,7 +103,7 @@ export function parseYouTubeUrl(value) {
   if (typeof value !== 'string' || !value.trim()) return null;
   try {
     const url = new URL(value);
-    if (url.protocol !== 'https:' || url.username || url.password || !['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be', 'www.youtu.be'].includes(url.hostname)) return null;
+    if (url.protocol !== 'https:' || url.username || url.password || url.port || !['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be', 'www.youtu.be'].includes(url.hostname)) return null;
 
     let videoId = '';
     if (url.hostname.endsWith('youtu.be')) {
