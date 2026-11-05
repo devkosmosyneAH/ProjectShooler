@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import './App.css';
 import { MAX_PDF_SIZE, createEmptyProject, extractProjectFromText, validateProject, buildPagesUrl } from './utils/projectData';
+import { ActionButton, Icon, Surface } from './components/Primitives';
 
 const navigation = [
-  { id: 'home', label: 'Inicio', icon: '⌂' },
-  { id: 'import', label: 'Importar PDF', icon: '↥' },
-  { id: 'editor', label: 'Editor de información', icon: '✎' },
-  { id: 'preview', label: 'Vista previa', icon: '◉' },
-  { id: 'export', label: 'Exportar archivos', icon: '⇩' },
-  { id: 'qr', label: 'Generador QR', icon: '▦' },
-  { id: 'publish', label: 'Publicación', icon: '↗' },
+  { id: 'home', label: 'Inicio' },
+  { id: 'import', label: 'Importar PDF' },
+  { id: 'editor', label: 'Editor de información' },
+  { id: 'preview', label: 'Vista previa' },
+  { id: 'export', label: 'Exportar archivos' },
+  { id: 'qr', label: 'Generador QR' },
+  { id: 'publish', label: 'Publicación' },
 ];
 
 function downloadBlob(blob, filename) {
@@ -105,7 +106,16 @@ function PublicClientView({ hash }) {
     return () => { active = false; };
   }, [hash]);
 
-  if (view.loading) return <main className="client-view"><p role="status">Cargando proyecto…</p></main>;
+  if (view.loading) {
+    return (
+      <main className="client-view client-loading" aria-busy="true">
+        <p className="visually-hidden" role="status">Cargando proyecto…</p>
+        <div className="loading-skeleton loading-skeleton-hero" aria-hidden="true" />
+        <div className="loading-skeleton loading-skeleton-card" aria-hidden="true" />
+        <div className="loading-skeleton loading-skeleton-card" aria-hidden="true" />
+      </main>
+    );
+  }
   if (view.error) {
     return (
       <main className="client-view">
@@ -393,26 +403,26 @@ function App() {
   const renderHome = () => (
     <>
       <PageHeader eyebrow="Espacio de trabajo" title="Publica un proyecto escolar" description="Convierte un PDF en una página accesible, revisada y lista para compartir." />
-      <section className="welcome-card">
+      <Surface as="section" variant="hero" className="welcome-card">
         <div className="welcome-copy">
-          <span className="welcome-icon">✦</span>
+          <span className="welcome-icon"><Icon name="spark" size={18} /></span>
           <p className="eyebrow">De documento a experiencia web</p>
           <h2>Un proyecto escolar, listo para compartir.</h2>
           <p>Extrae, organiza y revisa el contenido de tu documento antes de publicarlo como un sitio estático con su propio código QR.</p>
-          <button className="button button-light" onClick={() => inputRef.current?.click()}>Importar un PDF <span aria-hidden="true">→</span></button>
+          <ActionButton variant="light" onClick={() => inputRef.current?.click()}>Importar un PDF <span aria-hidden="true">→</span></ActionButton>
         </div>
-        <div className="welcome-orbit" aria-hidden="true"><div className="orbit-card orbit-document">PDF <small>proyecto.pdf</small></div><div className="orbit-card orbit-web">↗ <small>sitio web</small></div><div className="orbit-card orbit-qr">▦</div><div className="orbit-center">A</div></div>
-      </section>
-      <input ref={inputRef} className="visually-hidden" type="file" accept="application/pdf,.pdf" onChange={(event) => processFile(event.target.files?.[0])} />
+        <div className="welcome-orbit" aria-hidden="true"><div className="orbit-shape"><span /><span /><span /></div><div className="orbit-center">a.</div></div>
+      </Surface>
+      <input ref={inputRef} className="visually-hidden" type="file" accept="application/pdf,.pdf" aria-hidden="true" tabIndex={-1} onChange={(event) => processFile(event.target.files?.[0])} />
       <div className="stats-grid">
-        <article className="stat-card"><span>01</span><strong>{project.extraction.pageCount || '—'}</strong><p>Páginas procesadas</p></article>
-        <article className="stat-card"><span>02</span><strong>{project.sections.filter((item) => item.content).length}</strong><p>Secciones con contenido</p></article>
-        <article className="stat-card"><span>03</span><strong>{project.media.length}</strong><p>Imágenes añadidas</p></article>
-        <article className="stat-card"><span>04</span><strong>{pendingCount}</strong><p>Datos por revisar</p></article>
+        <Surface as="article" variant="stat" className="stat-card"><span>01</span><strong>{project.extraction.pageCount || '—'}</strong><p>Páginas procesadas</p></Surface>
+        <Surface as="article" variant="stat" className="stat-card"><span>02</span><strong>{project.sections.filter((item) => item.content).length}</strong><p>Secciones con contenido</p></Surface>
+        <Surface as="article" variant="stat" className="stat-card"><span>03</span><strong>{project.media.length}</strong><p>Imágenes añadidas</p></Surface>
+        <Surface as="article" variant="stat" className="stat-card"><span>04</span><strong>{pendingCount}</strong><p>Datos por revisar</p></Surface>
       </div>
       <section className="steps-section">
         <div className="section-heading"><div><p className="eyebrow">Flujo de trabajo</p><h2>Del PDF a tu página pública</h2></div></div>
-        <div className="steps-grid">{[['01', 'Importa', 'Procesa el PDF en tu navegador.'], ['02', 'Revisa', 'Corrige cada dato antes de publicarlo.'], ['03', 'Exporta', 'Descarga la página y publícala en GitHub Pages.']].map(([number, title, text]) => <article className="step-card" key={number}><span>{number}</span><h3>{title}</h3><p>{text}</p></article>)}</div>
+        <div className="steps-grid">{[['01', 'Importa', 'Procesa el PDF en tu navegador.'], ['02', 'Revisa', 'Corrige cada dato antes de publicarlo.'], ['03', 'Exporta', 'Descarga la página y publícala en GitHub Pages.']].map(([number, title, text]) => <Surface as="article" variant="card" className="step-card" key={number}><span>{number}</span><h3>{title}</h3><p>{text}</p></Surface>)}</div>
       </section>
       <Notice tone="warning">GitHub Pages es público y no ofrece autenticación de administrador. No publiques información confidencial ni datos personales sin autorización.</Notice>
     </>
@@ -427,11 +437,11 @@ function App() {
         onDragLeave={() => setDragging(false)}
         onDrop={(event) => { event.preventDefault(); setDragging(false); processFile(event.dataTransfer.files?.[0]); }}
       >
-        <input ref={inputRef} className="visually-hidden" type="file" accept="application/pdf,.pdf" onChange={(event) => processFile(event.target.files?.[0])} />
+        <input ref={inputRef} className="visually-hidden" type="file" accept="application/pdf,.pdf" aria-hidden="true" tabIndex={-1} onChange={(event) => processFile(event.target.files?.[0])} />
         <span className="upload-icon">↑</span>
         <h2>Arrastra aquí tu PDF</h2>
         <p>o selecciona un archivo desde tu dispositivo</p>
-        <button className="button button-primary" disabled={processing} onClick={() => inputRef.current?.click()}>Elegir documento</button>
+        <ActionButton loading={processing} onClick={() => inputRef.current?.click()}>{processing ? 'Procesando…' : 'Elegir documento'}</ActionButton>
         <small>PDF · máximo 50 MB · procesa texto y OCR localmente</small>
       </section>
       {pdfFile && <div className="file-card"><div className="file-icon">PDF</div><div><strong>{pdfFile.name}</strong><p>{(pdfFile.size / 1024 / 1024).toFixed(2)} MB · {project.extraction.pageCount || 'páginas por detectar'}</p></div><span className={`status-pill ${processing ? 'status-running' : processingCancelled ? 'status-running' : 'status-ready'}`}>{processing ? 'Procesando' : processingCancelled ? 'Cancelado' : 'Listo'}</span></div>}
@@ -483,7 +493,7 @@ function App() {
         <section className="editor-card">
           <div className="editor-card-heading"><div><p className="eyebrow">Recursos</p><h2>Imágenes y fotografías</h2></div></div>
           <p className="muted-copy">PDF.js no extrae automáticamente los archivos de imagen del PDF. Añade manualmente las imágenes que tengas permiso para publicar.</p>
-          <input ref={imageInputRef} className="visually-hidden" type="file" accept="image/*" multiple onChange={handleImageFiles} />
+          <input ref={imageInputRef} className="visually-hidden" type="file" accept="image/*" multiple aria-hidden="true" tabIndex={-1} onChange={handleImageFiles} />
           <button className="button button-outline" onClick={() => imageInputRef.current?.click()}>＋ Añadir imágenes</button>
           {project.media.length > 0 && <div className="media-list">{project.media.map((image) => <div className="media-row" key={image.path}><img src={image.preview} alt="" /><label className="grow">Texto alternativo<input value={image.alt} onChange={(event) => updateProject((current) => ({ ...current, media: current.media.map((item) => item.path === image.path ? { ...item, alt: event.target.value } : item) }))} placeholder={image.name} /></label><button className="icon-button remove-button" aria-label={`Eliminar imagen ${image.name}`} onClick={() => removeImage(image.path)}>×</button></div>)}</div>}
         </section>
@@ -494,7 +504,7 @@ function App() {
   const renderPreview = () => (
     <>
       <PageHeader eyebrow="Sitio público" title="Vista previa del proyecto" description="Así se organizará el contenido en el sitio público exportado." />
-      <a className="button button-outline client-view-link" href={`${import.meta.env.BASE_URL}#/View`} target="_blank" rel="noreferrer">Abrir vista pública</a>
+      <ActionButton as="a" variant="outline" className="client-view-link" href={`${import.meta.env.BASE_URL}#/View`} target="_blank" rel="noreferrer">Abrir vista pública</ActionButton>
       <PublicPreview project={project} hideEmpty={hideEmpty} />
     </>
   );
@@ -503,8 +513,8 @@ function App() {
     <>
       <PageHeader eyebrow="Paquete listo para publicar" title="Exporta tu proyecto" description="Descarga los JSON por separado o crea un ZIP autónomo con sitio público, imágenes e instrucciones." />
       <div className="export-grid">
-        <article className="export-card"><div className="export-icon">{"{ }"}</div><h2>Archivos JSON</h2><p>Incluye proyecto, integrantes, objetivos, desarrollo, conclusiones y referencias, sin duplicar el contenido entre archivos.</p><button className="button button-outline" disabled={!approved || validationErrors.length > 0} onClick={exportJson}>Descargar JSON · ZIP</button></article>
-        <article className="export-card export-featured"><div className="export-icon">⇩</div><span className="recommended">RECOMENDADO</span><h2>Sitio completo en ZIP</h2><p>Página responsive, carga de JSON por <code>fetch()</code>, imágenes, workflow de Pages y guía de publicación.</p><button className="button button-primary" disabled={!approved || validationErrors.length > 0} onClick={exportZip}>Generar ZIP del sitio</button></article>
+        <Surface as="section" variant="card" className="export-card"><div className="export-icon">{"{ }"}</div><h2>Archivos JSON</h2><p>Incluye proyecto, integrantes, objetivos, desarrollo, conclusiones y referencias, sin duplicar el contenido entre archivos.</p><ActionButton variant="outline" disabled={!approved || validationErrors.length > 0} onClick={exportJson}>Descargar JSON · ZIP</ActionButton></Surface>
+        <Surface as="article" variant="featured" className="export-card export-featured"><div className="export-icon">⇩</div><span className="recommended">RECOMENDADO</span><h2>Sitio completo en ZIP</h2><p>Página responsive, carga de JSON por <code>fetch()</code>, imágenes, workflow de Pages y guía de publicación.</p><ActionButton disabled={!approved || validationErrors.length > 0} onClick={exportZip}>Generar ZIP del sitio</ActionButton></Surface>
       </div>
       {validationErrors.length > 0 && <Notice tone="danger"><strong>No se puede exportar:</strong> {validationErrors.join(' ')}</Notice>}
       <section className="approval-card">
@@ -559,13 +569,13 @@ function App() {
       <aside className="sidebar">
         <button className="brand" onClick={() => setActivePage('home')} aria-label="Ir al inicio"><span className="brand-mark">a.</span><span>Aula<small>PROYECTOS ESCOLARES</small></span></button>
         <div className="workspace-label">ESPACIO DE TRABAJO</div>
-        <nav className="main-nav" aria-label="Navegación principal">{navigation.map((item) => <button key={item.id} className={`nav-item ${activePage === item.id ? 'nav-active' : ''}`} onClick={() => setActivePage(item.id)}><span className="nav-icon" aria-hidden="true">{item.icon}</span>{item.label}{item.id === 'editor' && pendingCount > 0 && <span className="nav-count">{pendingCount}</span>}</button>)}</nav>
+        <nav className="main-nav" aria-label="Navegación principal">{navigation.map((item) => <button key={item.id} className={`nav-item ${activePage === item.id ? 'nav-active' : ''}`} aria-current={activePage === item.id ? 'page' : undefined} onClick={() => setActivePage(item.id)}><span className="nav-icon"><Icon name={item.id} size={19} /></span>{item.label}{item.id === 'editor' && pendingCount > 0 && <span className="nav-count">{pendingCount}</span>}</button>)}</nav>
         <div className="sidebar-bottom"><div className="local-badge"><span /> Procesamiento local</div><p>Tus documentos se quedan en este dispositivo.</p><span className="version-label">AULA · BETA 1.0</span></div>
       </aside>
       <main className="main-panel">
-        <header className="topbar"><div className="breadcrumb"><span>Proyectos</span><b>/</b><strong>{navigation.find((item) => item.id === activePage)?.label}</strong></div><div className="topbar-right"><span className="privacy-chip">⌑ <span>Solo en este dispositivo</span></span><div className="avatar">A</div></div></header>
+        <header className="topbar"><div className="breadcrumb"><span>Proyectos</span><b>/</b><strong>{navigation.find((item) => item.id === activePage)?.label}</strong></div><div className="topbar-right"><span className="privacy-chip"><Icon name="privacy" size={15} /> <span>Solo en este dispositivo</span></span><div className="avatar">A</div></div></header>
         <div className="mobile-brand"><span className="brand-mark">a.</span><span>Aula</span></div>
-        <div className="content-area">{renderPage()}</div>
+        <div className="content-area"><div key={activePage} className="page-transition">{renderPage()}</div></div>
       </main>
       {error && activePage !== 'import' && activePage !== 'export' && activePage !== 'qr' && <div className="toast-error" role="alert">{error}<button onClick={() => setError('')} aria-label="Cerrar aviso">×</button></div>}
     </div>

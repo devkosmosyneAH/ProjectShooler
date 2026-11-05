@@ -43,3 +43,7 @@ El ZIP generado publica el sitio estático del proyecto escolar, no el administr
 - Documentos protegidos con contraseña, dañados o incompatibles muestran un error; no se intenta eludir su protección.
 - El borrador vive en la memoria de la pestaña y no se conserva al recargarla.
 - En Pages, tanto el sitio público como cualquier panel publicado son accesibles públicamente; no hay autenticación segura sin un servicio externo.
+
+## Interfaz
+
+El panel usa un sistema visual editorial de tonos marfil, verde bosque y acentos lima, implementado con variables CSS y sin dependencias de animación adicionales. Los componentes compartidos `Surface` y `ActionButton` admiten variantes y elemento semántico (`as`); las transiciones respetan `prefers-reduced-motion`.
