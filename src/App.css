@@ -419,7 +419,7 @@ button {
   inset: 41px 8px;
   transform: rotate(38deg) scaleY(.65);
 }
-developer-credit
+image-grid
 .orbit-center {
   position: absolute;
   top: 94px;
@@ -1062,7 +1062,7 @@ developer-credit
 
 .image-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 12px;
 }
 
@@ -3258,7 +3258,7 @@ summary:focus-visible {
 }
 
 .developer-credit {
-  padding: clamp(24px, 4vw, 42px) clamp(20px, 5vw, 54px);
+  padding: clamp(20px, 4vw, 22px) clamp(10px, 5vw, 54px);
   background: #203d32;
   color: #fffdf0;
 }
