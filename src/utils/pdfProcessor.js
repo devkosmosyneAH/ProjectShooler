@@ -47,13 +47,15 @@ export async function processPdf(file, { onProgress = () => {}, isCancelled = ()
   }
   if (file.size > MAX_PDF_SIZE) throw new Error('El PDF supera el límite de 50 MB.');
 
+  let loadingTask;
   let document;
   let ocrWorker;
   const pages = [];
   const ocrPages = [];
   let activeOcrPage = 0;
   try {
-    document = await getDocument({ data: await file.arrayBuffer() }).promise;
+    loadingTask = getDocument({ data: await file.arrayBuffer() });
+    document = await loadingTask.promise;
     if (!document.numPages) throw new Error('El PDF no contiene páginas para procesar.');
     for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
       if (isCancelled()) throw new PdfProcessingCancelledError();
@@ -106,6 +108,6 @@ export async function processPdf(file, { onProgress = () => {}, isCancelled = ()
     throw new Error(`No se pudo procesar el PDF: ${error.message || 'archivo dañado o incompatible'}`);
   } finally {
     if (ocrWorker) await ocrWorker.terminate();
-    if (document) await document.destroy();
+    if (loadingTask) await loadingTask.destroy();
   }
 }

@@ -26,10 +26,13 @@ function setPdfPages(pages) {
   const document = {
     numPages: pages.length,
     getPage: vi.fn(async (number) => pages[number - 1]),
+  };
+  const loadingTask = {
+    promise: Promise.resolve(document),
     destroy: vi.fn(),
   };
-  getDocument.mockReturnValue({ promise: Promise.resolve(document) });
-  return document;
+  getDocument.mockReturnValue(loadingTask);
+  return loadingTask;
 }
 
 function pdfFile(name = 'project.pdf') {
@@ -56,7 +59,7 @@ describe('browser PDF extraction', () => {
 
   test('extracts selectable text from a multipage PDF without starting OCR', async () => {
     const pages = [makePage('Selectable text from the first PDF page.'), makePage('Selectable text from the second PDF page.')];
-    const document = setPdfPages(pages);
+    const loadingTask = setPdfPages(pages);
     const progress = vi.fn();
 
     const result = await processPdf(pdfFile(), { onProgress: progress });
@@ -66,7 +69,7 @@ describe('browser PDF extraction', () => {
     expect(result.ocrPages).toEqual([]);
     expect(createWorker).not.toHaveBeenCalled();
     expect(pages[1].cleanup).toHaveBeenCalled();
-    expect(document.destroy).toHaveBeenCalled();
+    expect(loadingTask.destroy).toHaveBeenCalled();
     expect(progress).toHaveBeenCalledWith(expect.objectContaining({ page: 2, phase: 'complete' }));
   });
 
@@ -90,19 +93,22 @@ describe('browser PDF extraction', () => {
 
   test('rejects empty and damaged PDFs with clear errors', async () => {
     await expect(processPdf(new File([], 'empty.pdf', { type: 'application/pdf' }))).rejects.toThrow(/válido y no vacío/i);
-    getDocument.mockReturnValue({ promise: Promise.reject(new Error('Invalid PDF structure')) });
+    getDocument.mockReturnValue({
+      promise: Promise.reject(new Error('Invalid PDF structure')),
+      destroy: vi.fn(),
+    });
     await expect(processPdf(pdfFile())).rejects.toThrow(/Invalid PDF structure/i);
   });
 
   test('supports cancellation between pages and tears down resources', async () => {
     const pages = [makePage('First page has sufficient selectable text for extraction.'), makePage('Second page has sufficient selectable text too.')];
-    const document = setPdfPages(pages);
+    const loadingTask = setPdfPages(pages);
     let cancelled = false;
     await expect(processPdf(pdfFile(), {
       onProgress: ({ phase, page }) => { if (phase === 'complete' && page === 1) cancelled = true; },
       isCancelled: () => cancelled,
     })).rejects.toBeInstanceOf(PdfProcessingCancelledError);
-    expect(document.destroy).toHaveBeenCalled();
+    expect(loadingTask.destroy).toHaveBeenCalled();
     expect(pages[1].getTextContent).not.toHaveBeenCalled();
   });
 });
