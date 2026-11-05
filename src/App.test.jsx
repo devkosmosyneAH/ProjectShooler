@@ -124,6 +124,7 @@ test("renders only the public project at the View hash route", async () => {
   const project = createEmptyProject();
   project.projectId = "proyecto-publico";
   project.title = "Proyecto para clientes";
+  project.summary = "Resumen breve";
   project.sections[0].content = "Contenido real de introducción";
   vi.stubGlobal(
     "fetch",
@@ -153,7 +154,29 @@ test("renders only the public project at the View hash route", async () => {
     await screen.findByRole("heading", { name: project.title }),
   ).toBeInTheDocument();
   expect(screen.getByRole("navigation", { name: /secciones del proyecto/i })).toBeInTheDocument();
-  expect(screen.getByRole("link", { name: "Introducción" })).toHaveAttribute("href", "#project-section-introduction");
+  const introductionLink = screen.getByRole("link", {
+    name: "Introducción",
+  });
+  expect(introductionLink).toHaveAttribute(
+    "href",
+    "#project-section-introduction",
+  );
+  expect(screen.getByRole("link", { name: "Resumen" })).toHaveAttribute(
+    "aria-current",
+    "location",
+  );
+  const sectionLinks = within(
+    screen.getByRole("navigation", { name: /secciones del proyecto/i }),
+  ).getAllByRole("link");
+  for (const link of sectionLinks) {
+    const target = document.getElementById(
+      link.getAttribute("href").slice(1),
+    );
+    expect(target).not.toBeNull();
+    fireEvent.click(link);
+    expect(window.location.hash).toBe("#/view/");
+    expect(link).toHaveAttribute("aria-current", "location");
+  }
   expect(screen.getByText("Contenido real de introducción")).toBeInTheDocument();
   expect(screen.getByAltText("foto.png")).toBeInTheDocument();
   expect(screen.getByText(/Anthony/)).toBeInTheDocument();
@@ -169,6 +192,88 @@ test("renders only the public project at the View hash route", async () => {
     "src",
     expect.stringContaining("/documents/images/proyecto/foto.png"),
   );
+});
+
+test("opens and closes the mobile project menu with an edge swipe", async () => {
+  const project = createEmptyProject();
+  project.projectId = "proyecto-navegacion-movil";
+  project.title = "Proyecto móvil";
+  project.sections[0].content = "Contenido de introducción";
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url) =>
+      String(url).endsWith("/documents/index.json")
+        ? {
+            ok: true,
+            json: async () => ({
+              projects: [{ file: "proyecto.json", title: project.title }],
+            }),
+          }
+        : { ok: true, json: async () => project },
+    ),
+  );
+  window.location.hash = "#/view/";
+  render(<App />);
+
+  const menuButton = await screen.findByRole("button", {
+    name: /secciones/i,
+  });
+  const dispatchTouch = (type, x, y = 100) => {
+    const event = new Event(type);
+    Object.defineProperty(event, type === "touchstart" ? "touches" : "changedTouches", {
+      value: [{ clientX: x, clientY: y }],
+    });
+    window.dispatchEvent(event);
+  };
+
+  dispatchTouch("touchstart", 5);
+  dispatchTouch("touchend", 100);
+  await waitFor(() => expect(menuButton).toHaveAttribute("aria-expanded", "true"));
+
+  dispatchTouch("touchstart", 200);
+  dispatchTouch("touchend", 100);
+  await waitFor(() => expect(menuButton).toHaveAttribute("aria-expanded", "false"));
+  fireEvent.click(menuButton);
+  fireEvent.click(screen.getByRole("link", { name: "Introducción" }));
+  expect(menuButton).toHaveAttribute("aria-expanded", "false");
+  expect(window.location.hash).toBe("#/view/");
+});
+
+test("keeps the selected published project on the public route", async () => {
+  const project = createEmptyProject();
+  project.projectId = "proyecto-seleccionado";
+  project.title = "Proyecto seleccionado";
+  project.sections[0].content = "Contenido del proyecto seleccionado";
+  const fetchMock = vi.fn(async (url) => {
+    if (String(url).endsWith("/documents/index.json")) {
+      return {
+        ok: true,
+        json: async () => ({
+          projects: [
+            { file: "primero.json", title: "Primer proyecto" },
+            { file: "segundo.json", title: project.title },
+          ],
+        }),
+      };
+    }
+    return { ok: true, json: async () => project };
+  });
+  vi.stubGlobal("fetch", fetchMock);
+  window.location.hash = "#/View///?project=segundo.json";
+
+  render(<App />);
+
+  expect(
+    await screen.findByRole("heading", { name: project.title }),
+  ).toBeInTheDocument();
+  expect(
+    fetchMock.mock.calls.some(([url]) =>
+      String(url).endsWith("/documents/segundo.json"),
+    ),
+  ).toBe(true);
+  expect(
+    screen.queryByRole("navigation", { name: /navegación principal/i }),
+  ).not.toBeInTheDocument();
 });
 
 test("renders direct internet image paths from multimedia in the public gallery", async () => {

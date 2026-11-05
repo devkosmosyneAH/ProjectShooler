@@ -77,7 +77,13 @@ function Notice({ tone = "info", children }) {
 }
 
 function isPublicViewHash(hash) {
-  return hash.split("?")[0].replace(/\/+$/, "").toLowerCase() === "#/view";
+  return (
+    hash
+      .slice(1)
+      .split(/[?#]/, 1)[0]
+      .replace(/\/+$/, "")
+      .toLowerCase() === "/view"
+  );
 }
 
 function publicDocumentUrl(fileName = "") {
@@ -435,7 +441,9 @@ function PublicPreview({
   documentFile = "",
 }) {
   const [lightboxIndex, setLightboxIndex] = useState(null);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const lightboxRef = useRef(null);
+  const touchStartRef = useRef(null);
   const visibleSections = project.sections.filter(
     (section) => !hideEmpty || section.content.trim(),
   );
@@ -515,7 +523,69 @@ function PublicPreview({
       : []),
     ...(videos.length ? [{ id: "project-videos", label: "Videos" }] : []),
   ];
+  const pageLinkIds = pageLinks.map(({ id }) => id).join("|");
+  const [activeSection, setActiveSection] = useState(pageLinks[0]?.id || "");
+  const [heroVisible, setHeroVisible] = useState(true);
+  useEffect(() => {
+    const handleTouchStart = (event) => {
+      const touch = event.touches[0];
+      if (touch) touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+    };
+    const handleTouchEnd = (event) => {
+      const start = touchStartRef.current;
+      const touch = event.changedTouches[0];
+      touchStartRef.current = null;
+      if (!start || !touch) return;
+      const deltaX = touch.clientX - start.x;
+      const deltaY = touch.clientY - start.y;
+      if (Math.abs(deltaX) < 70 || Math.abs(deltaY) > 60) return;
+      if (!mobileNavOpen && start.x <= 28 && deltaX > 0)
+        setMobileNavOpen(true);
+      else if (mobileNavOpen && deltaX < 0) setMobileNavOpen(false);
+    };
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setMobileNavOpen(false);
+    };
+    window.addEventListener("touchstart", handleTouchStart, { passive: true });
+    window.addEventListener("touchend", handleTouchEnd, { passive: true });
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [mobileNavOpen]);
+  useEffect(() => {
+    const hero = document.getElementById("project-start");
+    if (!hero || !("IntersectionObserver" in window)) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      setHeroVisible(entry.isIntersecting);
+    });
+    observer.observe(hero);
+    return () => observer.disconnect();
+  }, []);
+  useEffect(() => {
+    if (!pageLinks.length || !("IntersectionObserver" in window)) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleSections = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort(
+            (first, second) =>
+              first.boundingClientRect.top - second.boundingClientRect.top,
+          );
+        if (visibleSections[0]) setActiveSection(visibleSections[0].target.id);
+      },
+      { rootMargin: "-15% 0px -70% 0px", threshold: 0 },
+    );
+    pageLinks.forEach(({ id }) => {
+      const section = document.getElementById(id);
+      if (section) observer.observe(section);
+    });
+    return () => observer.disconnect();
+  }, [pageLinkIds]);
   return (
+    <>
     <div className="public-preview project-infographic">
       <div className="infographic-masthead">
         <span className="infographic-brand">
@@ -585,203 +655,237 @@ function PublicPreview({
           </div>
         )}
       </header>
-      {pageLinks.length > 0 && (
-        <nav className="infographic-toc" aria-label="Secciones del proyecto">
-          {pageLinks.map(({ id, label }) => (
-            <a href={`#${id}`} key={id}>
-              {label}
-            </a>
-          ))}
-        </nav>
-      )}
-      <div className="infographic-content">
-        {!hasContent && (
-          <p className="empty-state">
-            Todavía no hay contenido para mostrar. Importa un PDF o completa el
-            editor.
-          </p>
-        )}
-        {chapters.length > 0 && (
-          <section
-            className="infographic-flow"
-            aria-label="Contenido del proyecto"
+      <div className="infographic-layout">
+        {pageLinks.length > 0 && (
+          <nav
+            className={`infographic-toc ${heroVisible ? "infographic-toc-before-content" : ""} ${mobileNavOpen ? "infographic-toc-open" : ""}`}
+            aria-label="Secciones del proyecto"
+            id="project-section-navigation"
           >
-            {chapters.map((chapter, index) => (
-              <article
-                className="infographic-chapter"
-                id={chapter.id}
-                key={chapter.id}
+            <div className="infographic-toc-heading">
+              <strong>Secciones</strong>
+              <button
+                type="button"
+                onClick={() => setMobileNavOpen(false)}
+                aria-label="Cerrar navegación"
               >
-                <div className="chapter-marker" aria-hidden="true">
-                  {String(index + 1).padStart(2, "0")}
-                </div>
-                <div className="chapter-card">
-                  <p className="chapter-kicker">{chapter.label}</p>
-                  <h2>{chapter.title}</h2>
-                  {chapter.content && (
-                    <ProjectSectionContent
-                      content={chapter.content}
-                      media={project.media}
-                      mediaSrc={mediaSrc}
-                      documentFile={documentFile}
-                    />
-                  )}
-                  {chapter.listTitle && <h3>{chapter.listTitle}</h3>}
-                  {chapter.items?.length > 0 && (
-                    <ul>
-                      {chapter.items.map((item, itemIndex) => (
-                        <li key={itemIndex}>{item}</li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </article>
+                ×
+              </button>
+            </div>
+            {pageLinks.map(({ id, label }) => (
+              <a
+                href={`#${id}`}
+                key={id}
+                aria-current={activeSection === id ? "location" : undefined}
+                onClick={(event) => {
+                  event.preventDefault();
+                  setActiveSection(id);
+                  document.getElementById(id)?.scrollIntoView?.({
+                    behavior: window.matchMedia?.(
+                      "(prefers-reduced-motion: reduce)",
+                    )?.matches
+                      ? "auto"
+                      : "smooth",
+                    block: "start",
+                  });
+                  setMobileNavOpen(false);
+                }}
+              >
+                {label}
+              </a>
             ))}
-          </section>
+          </nav>
         )}
-        {project.tables.length > 0 && (
-          <section className="infographic-extra" id="project-tables">
-            <h2>Tablas del proyecto</h2>
-            <div className="infographic-data-grid">
-              {project.tables.map((table) => (
-                <article className="infographic-data-card" key={table.id}>
-                  <h3>{table.title}</h3>
-                  <div className="table-scroll">
-                    <table>
-                      <tbody>
-                        {table.rows.map((row, rowIndex) => (
-                          <tr key={rowIndex}>
-                            {row.map((cell, cellIndex) =>
-                              rowIndex === 0 ? (
-                                <th key={cellIndex} scope="col">
-                                  {cell}
-                                </th>
-                              ) : (
-                                <td key={cellIndex}>{cell}</td>
-                              ),
-                            )}
-                          </tr>
+
+        <div className="infographic-content">
+          {!hasContent && (
+            <p className="empty-state">
+              Todavía no hay contenido para mostrar. Importa un PDF o completa
+              el editor.
+            </p>
+          )}
+          {chapters.length > 0 && (
+            <section
+              className="infographic-flow"
+              aria-label="Contenido del proyecto"
+            >
+              {chapters.map((chapter, index) => (
+                <article
+                  className="infographic-chapter"
+                  id={chapter.id}
+                  key={chapter.id}
+                >
+                  <div className="chapter-marker" aria-hidden="true">
+                    {String(index + 1).padStart(2, "0")}
+                  </div>
+                  <div className="chapter-card">
+                    <p className="chapter-kicker">{chapter.label}</p>
+                    <h2>{chapter.title}</h2>
+                    {chapter.content && (
+                      <ProjectSectionContent
+                        content={chapter.content}
+                        media={project.media}
+                        mediaSrc={mediaSrc}
+                        documentFile={documentFile}
+                      />
+                    )}
+                    {chapter.listTitle && <h3>{chapter.listTitle}</h3>}
+                    {chapter.items?.length > 0 && (
+                      <ul>
+                        {chapter.items.map((item, itemIndex) => (
+                          <li key={itemIndex}>{item}</li>
                         ))}
-                      </tbody>
-                    </table>
+                      </ul>
+                    )}
                   </div>
                 </article>
               ))}
-            </div>
-          </section>
-        )}
-        {(conclusions.length > 0 || recommendations.length > 0) && (
-          <section className="infographic-data-grid">
-            {conclusions.length > 0 && (
-              <article
-                className="infographic-data-card infographic-accent-peach"
-                id="project-conclusions"
-              >
-                <p className="chapter-kicker">Cierre</p>
-                <h2>Conclusiones</h2>
-                <ul>
-                  {conclusions.map((item, index) => (
-                    <li key={index}>{item}</li>
-                  ))}
-                </ul>
-              </article>
-            )}
-            {recommendations.length > 0 && (
-              <article
-                className="infographic-data-card infographic-accent-lilac"
-                id="project-recommendations"
-              >
-                <p className="chapter-kicker">Siguientes pasos</p>
-                <h2>Recomendaciones</h2>
-                <ul>
-                  {recommendations.map((item, index) => (
-                    <li key={index}>{item}</li>
-                  ))}
-                </ul>
-              </article>
-            )}
-          </section>
-        )}
-        {references.length > 0 && (
-          <section
-            className="infographic-data-card infographic-references"
-            id="project-references"
-          >
-            <p className="chapter-kicker">Fuentes consultadas</p>
-            <h2>Referencias</h2>
-            <ol>
-              {references.map((item, index) => (
-                <li key={index}>{item}</li>
-              ))}
-            </ol>
-          </section>
-        )}
-        {remainingMedia.length > 0 && (
-          <section
-            className="infographic-gallery infographic-data-card"
-            id="project-gallery"
-          >
-            <p className="chapter-kicker">Material visual</p>
-            <h2>Galería del proyecto</h2>
-            <div className="image-grid">
-              {remainingMedia.map((image, index) => (
-                <figure key={image.id || image.path}>
-                  <button
-                    type="button"
-                    className="gallery-image-button"
-                    aria-label={`Ampliar ${image.title || image.alt || image.name}`}
-                    onClick={() =>
-                      setLightboxIndex(index + (firstMedia ? 1 : 0))
-                    }
-                  >
-                    <img
-                      src={mediaSrc(image)}
-                      alt={image.alt || image.title || image.name}
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  </button>
-                  {image.title && <strong>{image.title}</strong>}
-                  {(image.description || image.alt) && (
-                    <figcaption>{image.description || image.alt}</figcaption>
-                  )}
-                  {image.section && (
-                    <small>
-                      Sección:{" "}
-                      {project.sections.find(
-                        (section) => section.id === image.section,
-                      )?.title || image.section}
-                    </small>
-                  )}
-                </figure>
-              ))}
-            </div>
-          </section>
-        )}
-        {videos.length > 0 && (
-          <section
-            className="infographic-data-card infographic-videos"
-            id="project-videos"
-          >
-            <p className="chapter-kicker">Material audiovisual</p>
-            <h2>Videos del proyecto</h2>
-            <div className="video-grid">
-              {videos.map((video) => (
-                <div key={video.id}>
-                  <YouTubePlayer video={video} />
-                  {video.section && (
-                    <small>
-                      Sección:{" "}
-                      {project.sections.find(
-                        (section) => section.id === video.section,
-                      )?.title || video.section}
-                    </small>
-                  )}
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
+            </section>
+          )}
+          {project.tables.length > 0 && (
+            <section className="infographic-extra" id="project-tables">
+              <h2>Tablas del proyecto</h2>
+              <div className="infographic-data-grid">
+                {project.tables.map((table) => (
+                  <article className="infographic-data-card" key={table.id}>
+                    <h3>{table.title}</h3>
+                    <div className="table-scroll">
+                      <table>
+                        <tbody>
+                          {table.rows.map((row, rowIndex) => (
+                            <tr key={rowIndex}>
+                              {row.map((cell, cellIndex) =>
+                                rowIndex === 0 ? (
+                                  <th key={cellIndex} scope="col">
+                                    {cell}
+                                  </th>
+                                ) : (
+                                  <td key={cellIndex}>{cell}</td>
+                                ),
+                              )}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
+          {(conclusions.length > 0 || recommendations.length > 0) && (
+            <section className="infographic-data-grid">
+              {conclusions.length > 0 && (
+                <article
+                  className="infographic-data-card infographic-accent-peach"
+                  id="project-conclusions"
+                >
+                  <p className="chapter-kicker">Cierre</p>
+                  <h2>Conclusiones</h2>
+                  <ul>
+                    {conclusions.map((item, index) => (
+                      <li key={index}>{item}</li>
+                    ))}
+                  </ul>
+                </article>
+              )}
+              {recommendations.length > 0 && (
+                <article
+                  className="infographic-data-card infographic-accent-lilac"
+                  id="project-recommendations"
+                >
+                  <p className="chapter-kicker">Siguientes pasos</p>
+                  <h2>Recomendaciones</h2>
+                  <ul>
+                    {recommendations.map((item, index) => (
+                      <li key={index}>{item}</li>
+                    ))}
+                  </ul>
+                </article>
+              )}
+            </section>
+          )}
+          {references.length > 0 && (
+            <section
+              className="infographic-data-card infographic-references"
+              id="project-references"
+            >
+              <p className="chapter-kicker">Fuentes consultadas</p>
+              <h2>Referencias</h2>
+              <ol>
+                {references.map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
+              </ol>
+            </section>
+          )}
+          {remainingMedia.length > 0 && (
+            <section
+              className="infographic-gallery infographic-data-card"
+              id="project-gallery"
+            >
+              <p className="chapter-kicker">Material visual</p>
+              <h2>Galería del proyecto</h2>
+              <div className="image-grid">
+                {remainingMedia.map((image, index) => (
+                  <figure key={image.id || image.path}>
+                    <button
+                      type="button"
+                      className="gallery-image-button"
+                      aria-label={`Ampliar ${image.title || image.alt || image.name}`}
+                      onClick={() =>
+                        setLightboxIndex(index + (firstMedia ? 1 : 0))
+                      }
+                    >
+                      <img
+                        src={mediaSrc(image)}
+                        alt={image.alt || image.title || image.name}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </button>
+                    {image.title && <strong>{image.title}</strong>}
+                    {(image.description || image.alt) && (
+                      <figcaption>{image.description || image.alt}</figcaption>
+                    )}
+                    {image.section && (
+                      <small>
+                        Sección:{" "}
+                        {project.sections.find(
+                          (section) => section.id === image.section,
+                        )?.title || image.section}
+                      </small>
+                    )}
+                  </figure>
+                ))}
+              </div>
+            </section>
+          )}
+          {videos.length > 0 && (
+            <section
+              className="infographic-data-card infographic-videos"
+              id="project-videos"
+            >
+              <p className="chapter-kicker">Material audiovisual</p>
+              <h2>Videos del proyecto</h2>
+              <div className="video-grid">
+                {videos.map((video) => (
+                  <div key={video.id}>
+                    <YouTubePlayer video={video} />
+                    {video.section && (
+                      <small>
+                        Sección:{" "}
+                        {project.sections.find(
+                          (section) => section.id === video.section,
+                        )?.title || video.section}
+                      </small>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
       </div>
       {lightboxIndex !== null && images[lightboxIndex] && (
         <div
@@ -855,8 +959,8 @@ function PublicPreview({
       <footer className="developer-credit">
         <div className="developer-credit-inner">
           <div>
-            <p className="developer-credit-kicker">Créditos</p>
-            <p className="developer-credit-title">Desarrollado por</p>
+            <p className="developer-credit-kicker">Créditos Desarrollo</p>
+            <p className="developer-credit-title">Full Stack Developer</p>
             <strong>{DEVELOPER_PROFILE.name}</strong>
           </div>
           <nav
@@ -878,6 +982,28 @@ function PublicPreview({
         </div>
       </footer>
     </div>
+    {pageLinks.length > 0 && (
+      <>
+        <button
+          type="button"
+          className={`infographic-toc-backdrop ${mobileNavOpen ? "infographic-toc-backdrop-visible" : ""}`}
+          onClick={() => setMobileNavOpen(false)}
+          aria-label="Cerrar navegación"
+          aria-hidden={!mobileNavOpen}
+          tabIndex={mobileNavOpen ? 0 : -1}
+        />
+        <button
+          type="button"
+          className="infographic-menu-toggle"
+          onClick={() => setMobileNavOpen(true)}
+          aria-expanded={mobileNavOpen}
+          aria-controls="project-section-navigation"
+        >
+          <span aria-hidden="true">☰</span> Secciones
+        </button>
+      </>
+    )}
+    </>
   );
 }
 
@@ -1162,7 +1288,9 @@ function App() {
       return;
     }
     try {
-      const extension = file.name.match(/\.(?:jpe?g|png|webp)$/i)?.[0].toLowerCase();
+      const extension = file.name
+        .match(/\.(?:jpe?g|png|webp)$/i)?.[0]
+        .toLowerCase();
       const baseName =
         file.name
           .slice(0, -extension.length)
@@ -2171,12 +2299,14 @@ function App() {
                 (isValidExternalImageUrl(image.path)
                   ? image.path
                   : image.source === "github-raw" &&
-                isValidGitHubRawBaseUrl(project.resourceConfig?.rawBaseUrl)
-                  ? resolveRawResourceUrl(
-                      project.resourceConfig.rawBaseUrl,
-                      image.path,
-                    )
-                  : "");
+                      isValidGitHubRawBaseUrl(
+                        project.resourceConfig?.rawBaseUrl,
+                      )
+                    ? resolveRawResourceUrl(
+                        project.resourceConfig.rawBaseUrl,
+                        image.path,
+                      )
+                    : "");
               return (
                 <article className="image-editor-card" key={imageKey}>
                   {preview ? (
@@ -3091,7 +3221,9 @@ function App() {
         </div>
       </main>
       {error &&
-        !["import", "images", "videos", "export", "qr"].includes(activePage) && (
+        !["import", "images", "videos", "export", "qr"].includes(
+          activePage,
+        ) && (
           <div className="toast-error" role="alert">
             {error}
             <button onClick={() => setError("")} aria-label="Cerrar aviso">
