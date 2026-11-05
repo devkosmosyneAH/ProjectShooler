@@ -17,8 +17,18 @@ function downloadBlob(blob, filename) {
   const link = document.createElement('a');
   link.href = url;
   link.download = filename;
+  document.body.append(link);
   link.click();
+  link.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function extractedJsonFilename(sourceFileName, fallback) {
+  const baseName = sourceFileName
+    .replace(/\.pdf$/i, '')
+    .replace(/[^a-zA-Z0-9._-]/g, '-')
+    .replace(/^\.+/, '');
+  return `${baseName || fallback}.json`;
 }
 
 function fileAsDataUrl(file) {
@@ -172,6 +182,11 @@ function App() {
         result.ocrPages,
       );
       extracted.extraction.pendingReview = true;
+      const json = `${JSON.stringify(extracted, null, 2)}\n`;
+      downloadBlob(
+        new Blob([json], { type: 'application/json' }),
+        extractedJsonFilename(file.name, extracted.projectId),
+      );
       setProject(extracted);
       setApproved(false);
       setActivePage('editor');
@@ -310,7 +325,7 @@ function App() {
       </section>
       {pdfFile && <div className="file-card"><div className="file-icon">PDF</div><div><strong>{pdfFile.name}</strong><p>{(pdfFile.size / 1024 / 1024).toFixed(2)} MB · {project.extraction.pageCount || 'páginas por detectar'}</p></div><span className={`status-pill ${processing ? 'status-running' : processingCancelled ? 'status-running' : 'status-ready'}`}>{processing ? 'Procesando' : processingCancelled ? 'Cancelado' : 'Listo'}</span></div>}
       {processing && <section className="progress-card"><div className="progress-top"><strong>{progress?.phase === 'ocr' ? 'Reconociendo texto con OCR…' : 'Extrayendo texto…'}</strong><span>{progress?.page ? `Página ${progress.page} de ${progress.total}` : 'Preparando documento'}</span></div><div className="progress-track"><div style={{ width: progress?.total ? `${Math.max(3, (progress.page / progress.total) * 100)}%` : '4%' }} /></div><div className="progress-bottom"><span>{progress?.status || 'El archivo permanece en este dispositivo.'}</span><button className="button button-quiet" onClick={() => { cancelRef.current = true; }}>Cancelar proceso</button></div></section>}
-      {project.extraction.pageCount > 0 && !processing && <Notice tone="success">Extracción completada en {project.extraction.pageCount} páginas. OCR aplicado en {project.extraction.ocrPages.length} páginas.</Notice>}
+      {project.extraction.pageCount > 0 && !processing && <Notice tone="success">Extracción completada en {project.extraction.pageCount} páginas. OCR aplicado en {project.extraction.ocrPages.length} páginas. Se descargó {project.projectId}.json; si lo necesitas en <code>documents</code>, muévelo allí desde la carpeta de descargas.</Notice>}
       <Notice>PDF.js y Tesseract se ejecutan en el navegador. El motor y los datos de idioma de OCR pueden descargarse desde una CDN; el documento no se envía a ningún servidor.</Notice>
       {error && <Notice tone="danger">{error}</Notice>}
     </>
@@ -319,6 +334,7 @@ function App() {
   const renderEditor = () => (
     <>
       <PageHeader eyebrow="Revisión editorial" title="Editor de información" description="Verifica y corrige el texto detectado. Los campos vacíos quedan pendientes: no se completa contenido automáticamente." />
+      {project.extraction.pageCount > 0 && <Notice tone="success">Extracción completada en {project.extraction.pageCount} páginas. Se descargó {extractedJsonFilename(project.extraction.sourceFileName, project.projectId)}; si lo necesitas en <code>documents</code>, muévelo allí desde la carpeta de descargas.</Notice>}
       {project.extraction.sourceFileName && <Notice tone="warning">Detectado desde {project.extraction.sourceFileName}. Confirma nombres, referencias y contenido antes de exportar.</Notice>}
       {pendingCount > 0 && <Notice tone="warning">Hay {pendingCount} campos o secciones vacíos. Puedes completarlos o publicarlos ocultos.</Notice>}
       <div className="editor-layout">
