@@ -1,8 +1,10 @@
-import JSZip from 'jszip';
-import { createProjectFiles } from './projectData';
-import { DEVELOPER_PROFILE } from './developerProfile';
+import JSZip from "jszip";
+import { createProjectFiles } from "./projectData";
+import { DEVELOPER_PROFILE } from "./developerProfile";
 
-const publicRuntime = (resourceConfig) => `const root = document.querySelector('#project');
+const publicRuntime = (
+  resourceConfig,
+) => `const root = document.querySelector('#project');
 const resourceConfig = ${JSON.stringify(resourceConfig)};
 const rawBaseUrl = resourceConfig.rawBaseUrl ? resourceConfig.rawBaseUrl.replace(/\\/+$/, '') + '/' : '';
 const rawResourceUrl = path => new URL(path.split('/').map(encodeURIComponent).join('/'), rawBaseUrl).href;
@@ -297,36 +299,56 @@ const publicHtml = `<!doctype html>
 
 function assertBundledImages(project, imageFiles) {
   for (const image of project.media) {
-    if (image.source === 'github-raw') continue;
+    if (image.source === "github-raw") continue;
     if (!imageFiles[image.path]) {
-      throw new Error(`Falta el archivo local de la imagen "${image.title || image.name}": ${image.path}. No se exportaron referencias rotas.`);
+      throw new Error(
+        `Falta el archivo local de la imagen "${image.title || image.name}": ${image.path}. No se exportaron referencias rotas.`,
+      );
     }
   }
 }
 
 function addLocalImages(zip, project, imageFiles) {
   for (const image of project.media) {
-    if (image.source !== 'github-raw') zip.file(`public/${image.path}`, imageFiles[image.path]);
+    if (image.source !== "github-raw")
+      zip.file(`public/${image.path}`, imageFiles[image.path]);
   }
 }
 
-export async function createSiteZip(project, imageFiles = {}, originalFile = null, { hideEmptySections = true } = {}) {
+export async function createSiteZip(
+  project,
+  imageFiles = {},
+  originalFile = null,
+  { hideEmptySections = true } = {},
+) {
   assertBundledImages(project, imageFiles);
   const zip = new JSZip();
-  const jsonFiles = createProjectFiles(project, { includeOriginal: Boolean(originalFile), hideEmptySections });
-  zip.file('public/index.html', publicHtml);
-  zip.file('public/app.js', publicRuntime(project.resourceConfig || { mode: 'local', rawBaseUrl: '' }));
-  zip.file('public/styles.css', `${publicStyles}${developerStyles}`);
-  Object.entries(jsonFiles).forEach(([name, content]) => zip.file(`public/data/${name}`, content));
-  zip.folder('public/images/proyecto');
+  const jsonFiles = createProjectFiles(project, {
+    includeOriginal: Boolean(originalFile),
+    hideEmptySections,
+  });
+  zip.file("public/index.html", publicHtml);
+  zip.file(
+    "public/app.js",
+    publicRuntime(project.resourceConfig || { mode: "local", rawBaseUrl: "" }),
+  );
+  zip.file("public/styles.css", `${publicStyles}${developerStyles}`);
+  Object.entries(jsonFiles).forEach(([name, content]) =>
+    zip.file(`public/data/${name}`, content),
+  );
+  zip.folder("public/images/proyecto");
 
   addLocalImages(zip, project, imageFiles);
   if (originalFile) {
-    const safeName = originalFile.name.replace(/[^a-zA-Z0-9._-]/g, '-').replace(/^\.+/, '') || 'documento.pdf';
+    const safeName =
+      originalFile.name.replace(/[^a-zA-Z0-9._-]/g, "-").replace(/^\.+/, "") ||
+      "documento.pdf";
     zip.file(`public/documents/${safeName}`, originalFile);
   }
 
-  zip.file('README.md', `# Publicación del proyecto escolar
+  zip.file(
+    "README.md",
+    `# Publicación del proyecto escolar
 
 1. Crea un repositorio público en GitHub. Este paquete es un sitio estático; no contiene credenciales ni protege contenido privado.
 2. Descomprime todos los archivos de este paquete en la raíz del repositorio. Conserva la carpeta \`.github/workflows\`.
@@ -343,8 +365,11 @@ git push
 6. La URL será \`https://<usuario>.github.io/<repositorio>/\` (o la raíz para el repositorio \`<usuario>.github.io\`). Configura esa URL en el generador para crear el QR definitivo.
 
 Los PDF se procesan en el navegador; nunca se envían a este sitio. La aplicación no tiene autenticación de administrador: cualquier información publicada en Pages será pública.
-`);
-  zip.file('.github/workflows/pages.yml', `name: Publish project site
+`,
+  );
+  zip.file(
+    ".github/workflows/pages.yml",
+    `name: Publish project site
 on:
   push:
     branches: [main]
@@ -370,14 +395,29 @@ jobs:
           path: ./public
       - id: deployment
         uses: actions/deploy-pages@v4
-`);
-  return zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+`,
+  );
+  return zip.generateAsync({
+    type: "blob",
+    compression: "DEFLATE",
+    compressionOptions: { level: 6 },
+  });
 }
 
-export async function createJsonZip(project, imageFiles = {}, { hideEmptySections = true } = {}) {
+export async function createJsonZip(
+  project,
+  imageFiles = {},
+  { hideEmptySections = true } = {},
+) {
   assertBundledImages(project, imageFiles);
   const zip = new JSZip();
-  Object.entries(createProjectFiles(project, { hideEmptySections })).forEach(([name, content]) => zip.file(`public/data/${name}`, content));
+  Object.entries(createProjectFiles(project, { hideEmptySections })).forEach(
+    ([name, content]) => zip.file(`public/data/${name}`, content),
+  );
   addLocalImages(zip, project, imageFiles);
-  return zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+  return zip.generateAsync({
+    type: "blob",
+    compression: "DEFLATE",
+    compressionOptions: { level: 6 },
+  });
 }

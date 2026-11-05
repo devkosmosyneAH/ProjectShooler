@@ -1,12 +1,12 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest';
-import QRCode from 'qrcode';
-import { jsPDF } from 'jspdf';
-import { downloadQrPdf, makeQrDataUrl } from './qr';
+import { beforeEach, describe, expect, test, vi } from "vitest";
+import QRCode from "qrcode";
+import { jsPDF } from "jspdf";
+import { downloadQrPdf, makeQrDataUrl } from "./qr";
 
-vi.mock('qrcode', () => ({
+vi.mock("qrcode", () => ({
   default: { toDataURL: vi.fn() },
 }));
-vi.mock('jspdf', () => ({
+vi.mock("jspdf", () => ({
   jsPDF: vi.fn(function MockJsPdf() {
     return {
       setFont: vi.fn(),
@@ -19,31 +19,46 @@ vi.mock('jspdf', () => ({
   }),
 }));
 
-describe('QR generation', () => {
+describe("QR generation", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    QRCode.toDataURL.mockResolvedValue('data:image/png;base64,qr');
+    QRCode.toDataURL.mockResolvedValue("data:image/png;base64,qr");
   });
 
-  test('creates a high-resolution QR with high error correction and quiet margin', async () => {
-    const result = await makeQrDataUrl('https://school.github.io/science/');
+  test("creates a high-resolution QR with high error correction and quiet margin", async () => {
+    const result = await makeQrDataUrl("https://school.github.io/science/");
 
-    expect(result).toBe('data:image/png;base64,qr');
-    expect(QRCode.toDataURL).toHaveBeenCalledWith('https://school.github.io/science/', expect.objectContaining({
-      errorCorrectionLevel: 'H',
-      margin: 4,
-      width: 1200,
-    }));
+    expect(result).toBe("data:image/png;base64,qr");
+    expect(QRCode.toDataURL).toHaveBeenCalledWith(
+      "https://school.github.io/science/",
+      expect.objectContaining({
+        errorCorrectionLevel: "H",
+        margin: 4,
+        width: 1200,
+      }),
+    );
   });
 
-  test('exports a print-ready PDF containing the QR image and optional caption', async () => {
-    await downloadQrPdf('https://school.github.io/science/', 'Escanea el proyecto');
+  test("exports a print-ready PDF containing the QR image and optional caption", async () => {
+    await downloadQrPdf(
+      "https://school.github.io/science/",
+      "Escanea el proyecto",
+    );
     expect(jsPDF).toHaveBeenCalled();
-    expect(jsPDF.mock.results[0].value.addImage).toHaveBeenCalledWith('data:image/png;base64,qr', 'PNG', 50, 48, 110, 110);
-    expect(jsPDF.mock.results[0].value.save).toHaveBeenCalledWith('codigo-qr-proyecto.pdf');
+    expect(jsPDF.mock.results[0].value.addImage).toHaveBeenCalledWith(
+      "data:image/png;base64,qr",
+      "PNG",
+      50,
+      48,
+      110,
+      110,
+    );
+    expect(jsPDF.mock.results[0].value.save).toHaveBeenCalledWith(
+      "codigo-qr-proyecto.pdf",
+    );
   });
 
-  test('requires a public URL', async () => {
-    await expect(makeQrDataUrl('')).rejects.toThrow(/URL pública/i);
+  test("requires a public URL", async () => {
+    await expect(makeQrDataUrl("")).rejects.toThrow(/URL pública/i);
   });
 });
