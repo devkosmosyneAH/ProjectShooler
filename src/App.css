@@ -419,8 +419,8 @@ button {
   inset: 41px 8px;
   transform: rotate(38deg) scaleY(.65);
 }
-image-grid
-.orbit-center {
+
+preview-byline .orbit-center {
   position: absolute;
   top: 94px;
   left: 116px;
@@ -1007,9 +1007,15 @@ image-grid
   white-space: pre-line;
 }
 
+.preview-byline-label_1 {
+  font-size: 16px;
+  font-weight: 900;
+}
+
 .preview-byline {
   color: #bddbdc;
-  font-size: 10px;
+  font-size: 18px;
+  font-weight: 600;
 }
 
 .preview-content {

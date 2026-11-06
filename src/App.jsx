@@ -621,11 +621,12 @@ function PublicPreview({
             )}
             {project.authors.length > 0 && (
               <p className="preview-byline">
-                Por{" "}
+                <span className="preview-byline-label_1">Autores:</span>{" "}
                 {project.authors
                   .map((author) => author.name)
                   .filter(Boolean)
                   .join(", ")}
+                {"."}
               </p>
             )}
           </div>
