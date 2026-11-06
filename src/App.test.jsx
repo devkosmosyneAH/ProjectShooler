@@ -208,7 +208,7 @@ test("renders only the public project at the View hash route", async () => {
   });
   fireEvent.click(qrButton);
   const qrDialog = await screen.findByRole("dialog", {
-    name: /escanea para visitar la página/i,
+    name: /escanea para compartir la página con los demás/i,
   });
   expect(
     within(qrDialog).getByRole("img", { name: /código qr para/i }),

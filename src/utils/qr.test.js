@@ -1,10 +1,12 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import QRCode from "qrcode";
 import { jsPDF } from "jspdf";
 import { downloadQrPdf, makeQrDataUrl } from "./qr";
 
 vi.mock("qrcode", () => ({
-  default: { toDataURL: vi.fn() },
+  default: {
+    create: vi.fn(),
+  },
 }));
 vi.mock("jspdf", () => ({
   jsPDF: vi.fn(function MockJsPdf() {
@@ -20,23 +22,54 @@ vi.mock("jspdf", () => ({
 }));
 
 describe("QR generation", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    QRCode.toDataURL.mockResolvedValue("data:image/png;base64,qr");
+  let canvasContext;
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
-  test("creates a high-resolution QR with high error correction and quiet margin", async () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    canvasContext = {
+      arc: vi.fn(),
+      beginPath: vi.fn(),
+      closePath: vi.fn(),
+      fill: vi.fn(),
+      fillRect: vi.fn(),
+      lineTo: vi.fn(),
+      moveTo: vi.fn(),
+      quadraticCurveTo: vi.fn(),
+    };
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(
+      canvasContext,
+    );
+    vi.spyOn(HTMLCanvasElement.prototype, "toDataURL").mockReturnValue(
+      "data:image/png;base64,qr",
+    );
+    QRCode.create.mockReturnValue({
+      modules: {
+        size: 21,
+        get: vi.fn(() => true),
+      },
+    });
+  });
+
+  test("draws a high-resolution dotted QR with rounded finders and center mark", async () => {
     const result = await makeQrDataUrl("https://school.github.io/science/");
 
     expect(result).toBe("data:image/png;base64,qr");
-    expect(QRCode.toDataURL).toHaveBeenCalledWith(
+    expect(QRCode.create).toHaveBeenCalledWith(
       "https://school.github.io/science/",
       expect.objectContaining({
         errorCorrectionLevel: "H",
-        margin: 4,
-        width: 1200,
       }),
     );
+    expect(HTMLCanvasElement.prototype.toDataURL).toHaveBeenCalledWith(
+      "image/png",
+    );
+    expect(canvasContext.arc).toHaveBeenCalled();
+    expect(canvasContext.quadraticCurveTo).toHaveBeenCalled();
+    expect(canvasContext.fillRect).toHaveBeenCalled();
   });
 
   test("exports a print-ready PDF containing the QR image and optional caption", async () => {

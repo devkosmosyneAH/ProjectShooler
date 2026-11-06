@@ -493,8 +493,9 @@ function PublicClientView({ hash }) {
             >
               ×
             </button>
-            <p className="eyebrow">Comparte este proyecto</p>
-            <h2 id="public-qr-title">Escanea para visitar la página</h2>
+            <h2 id="public-qr-title">
+              Escanea para compartir la página con los demás
+            </h2>
             {qrLoading ? (
               <p role="status">Generando código QR…</p>
             ) : qrError ? (
