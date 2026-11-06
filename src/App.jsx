@@ -217,6 +217,16 @@ function PublicClientView({ hash }) {
     projects: [],
     error: "",
   });
+  const [qrOpen, setQrOpen] = useState(false);
+  const [qrImage, setQrImage] = useState("");
+  const [qrLoading, setQrLoading] = useState(false);
+  const [qrError, setQrError] = useState("");
+  const qrTriggerRef = useRef(null);
+  const qrCloseRef = useRef(null);
+
+  useEffect(() => {
+    if (qrOpen) qrCloseRef.current?.focus();
+  }, [qrOpen]);
 
   useEffect(() => {
     let active = true;
@@ -354,9 +364,33 @@ function PublicClientView({ hash }) {
     };
   }, [hash]);
 
+  const openQr = async () => {
+    setQrOpen(true);
+    setQrLoading(true);
+    setQrError("");
+    try {
+      const { makeQrDataUrl } = await import("./utils/qr");
+      setQrImage(await makeQrDataUrl(window.location.href));
+    } catch (error) {
+      setQrError(error.message);
+    } finally {
+      setQrLoading(false);
+    }
+  };
+
+  const closeQr = () => {
+    setQrOpen(false);
+    qrTriggerRef.current?.focus();
+  };
+
   if (view.loading) {
     return (
-      <main className="client-view client-loading" aria-busy="true">
+      <main
+        className="client-view client-loading"
+        id="main-content"
+        tabIndex="-1"
+        aria-busy="true"
+      >
         <p className="visually-hidden" role="status">
           Cargando proyecto…
         </p>
@@ -377,7 +411,7 @@ function PublicClientView({ hash }) {
   }
   if (view.error) {
     return (
-      <main className="client-view">
+      <main className="client-view" id="main-content" tabIndex="-1">
         <section className="client-message" role="alert">
           <h1>No se pudo mostrar el proyecto</h1>
           <p>{view.error}</p>
@@ -391,7 +425,7 @@ function PublicClientView({ hash }) {
   }
   if (!view.project) {
     return (
-      <main className="client-view">
+      <main className="client-view" id="main-content" tabIndex="-1">
         <section className="client-message">
           <p className="eyebrow">Proyectos</p>
           <h1>Selecciona un proyecto</h1>
@@ -425,12 +459,59 @@ function PublicClientView({ hash }) {
     ).href;
   };
   return (
-    <main className="client-view">
+    <main className="client-view" id="main-content" tabIndex="-1">
       <PublicPreview
         project={view.project}
         mediaSrc={mediaSrc}
         documentFile={view.file}
+        onShowQr={openQr}
+        qrTriggerRef={qrTriggerRef}
       />
+      {qrOpen && (
+        <div
+          className="public-qr-overlay"
+          role="presentation"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) closeQr();
+          }}
+        >
+          <section
+            className="public-qr-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="public-qr-title"
+            onKeyDown={(event) => {
+              if (event.key === "Escape") closeQr();
+            }}
+          >
+            <button
+              ref={qrCloseRef}
+              type="button"
+              className="public-qr-close"
+              onClick={closeQr}
+              aria-label="Cerrar código QR"
+            >
+              ×
+            </button>
+            <p className="eyebrow">Comparte este proyecto</p>
+            <h2 id="public-qr-title">Escanea para visitar la página</h2>
+            {qrLoading ? (
+              <p role="status">Generando código QR…</p>
+            ) : qrError ? (
+              <p role="alert">{qrError}</p>
+            ) : (
+              <>
+                <img
+                  className="public-qr-image"
+                  src={qrImage}
+                  alt={`Código QR para ${window.location.href}`}
+                />
+                <code className="public-qr-url">{window.location.href}</code>
+              </>
+            )}
+          </section>
+        </div>
+      )}
     </main>
   );
 }
@@ -452,6 +533,8 @@ function PublicPreview({
   hideEmpty = true,
   mediaSrc = (media) => media.preview || media.path,
   documentFile = "",
+  onShowQr,
+  qrTriggerRef,
 }) {
   const [lightboxIndex, setLightboxIndex] = useState(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -710,6 +793,17 @@ function PublicPreview({
                   {label}
                 </a>
               ))}
+              {onShowQr && (
+                <button
+                  ref={qrTriggerRef}
+                  type="button"
+                  className="infographic-toc-qr"
+                  onClick={onShowQr}
+                >
+                  <Icon name="qr" size={16} />
+                  Mostrar código QR
+                </button>
+              )}
             </nav>
           )}
 
@@ -3211,7 +3305,7 @@ function App() {
           <span className="version-label">AULA · BETA 1.0</span>
         </div>
       </aside>
-      <main className="main-panel">
+      <main className="main-panel" id="main-content" tabIndex="-1">
         <header className="topbar">
           <div className="breadcrumb">
             <span>Proyectos</span>

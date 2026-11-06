@@ -29,6 +29,23 @@ button {
   cursor: pointer;
 }
 
+.skip-to-content {
+  position: fixed;
+  z-index: 1100;
+  top: 12px;
+  left: 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #18395c;
+  color: #fff;
+  text-decoration: none;
+  transform: translateY(calc(-100% - 16px));
+}
+
+.skip-to-content:focus {
+  transform: translateY(0);
+}
+
 .app-shell {
   display: flex;
   min-height: 100vh;
@@ -978,6 +995,66 @@ preview-byline .orbit-center {
 .client-view-link {
   margin-bottom: 12px;
   text-decoration: none;
+}
+
+.public-qr-overlay {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  padding: 16px;
+  place-items: center;
+  background: rgb(17 28 40 / 68%);
+}
+
+.public-qr-dialog {
+  position: relative;
+  box-sizing: border-box;
+  width: min(100%, 420px);
+  padding: 30px;
+  border: 1px solid #e5eaf0;
+  border-radius: 16px;
+  background: #fff;
+  color: #394e65;
+  text-align: center;
+  box-shadow: 0 24px 80px rgb(0 0 0 / 24%);
+}
+
+.public-qr-dialog h2 {
+  margin: 4px 24px 18px;
+  color: #223b57;
+  font-family: Manrope, sans-serif;
+  font-size: 20px;
+}
+
+.public-qr-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: #f1f4f6;
+  color: #394e65;
+  font-size: 25px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.public-qr-image {
+  display: block;
+  width: min(100%, 300px);
+  aspect-ratio: 1;
+  margin: 0 auto 16px;
+  image-rendering: pixelated;
+}
+
+.public-qr-url {
+  display: block;
+  color: #526c43;
+  font-size: 11px;
+  overflow-wrap: anywhere;
 }
 
 .preview-hero {
@@ -3005,6 +3082,33 @@ summary:focus-visible {
     box-shadow .2s ease;
 }
 
+.infographic-toc-qr {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 11px;
+  border: 1px solid #e3e5c7;
+  border-radius: 9px;
+  background: #f3f4df;
+  color: #324c37;
+  font: inherit;
+  font-size: 11px;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background .2s ease,
+    border-color .2s ease,
+    color .2s ease,
+    transform .2s ease;
+}
+
+.infographic-toc-qr:hover {
+  border-color: #d3d9a1;
+  background: #ecefcf;
+  transform: translateX(3px);
+}
+
 .infographic-toc a:hover,
 .infographic-toc a[aria-current="location"] {
   border-color: #e3e5c7;
@@ -3449,6 +3553,12 @@ summary:focus-visible {
     font-size: 12px;
   }
 
+  .infographic-toc-qr {
+    flex: 0 0 auto;
+    min-height: 42px;
+    font-size: 12px;
+  }
+
   .infographic-toc-backdrop {
     position: fixed;
     z-index: 11;
@@ -3553,6 +3663,7 @@ summary:focus-visible {
   .infographic-toc,
   .infographic-toc-backdrop,
   .infographic-toc a,
+  .infographic-toc-qr,
   .infographic-menu-toggle,
   .developer-links a {
     transition: none;

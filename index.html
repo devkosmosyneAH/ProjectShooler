@@ -1,17 +1,128 @@
 <!doctype html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#f5f4ed" />
-    <meta
-      name="description"
-      content="Importa proyectos escolares desde PDF y prepara su publicación estática."
-    />
-    <title>Aula — Publicación de proyectos</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+
+<head>
+  <!-- =========================================
+         CONFIGURACIÓN GENERAL
+    ========================================== -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+  <meta name="theme-color" content="#f6f7fb" />
+  <meta name="color-scheme" content="light" />
+
+  <!-- =========================================
+         SEO PRINCIPAL
+    ========================================== -->
+  <title>Aula | Crea, importa y publica proyectos escolares</title>
+
+  <meta name="description"
+    content="Aula es una herramienta para crear, organizar, importar y publicar proyectos escolares. Trabaja con documentos PDF y prepara proyectos para su publicación web." />
+
+  <meta name="keywords"
+    content="proyectos escolares, generador de proyectos escolares, proyectos educativos, tareas escolares, PDF, educación, herramientas educativas, publicación de proyectos" />
+
+  <meta name="author" content="Aula" />
+  <meta name="application-name" content="Aula" />
+  <meta name="generator" content="React + Vite" />
+
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+  <meta name="googlebot" content="index, follow" />
+
+  <link rel="canonical" href="https://devkosmosyneAH.github.io/ProjectShooler/" />
+
+  <!-- =========================================
+         OPEN GRAPH - FACEBOOK / WHATSAPP / LINKEDIN
+    ========================================== -->
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="es_ES" />
+  <meta property="og:site_name" content="Aula" />
+
+  <meta property="og:title" content="Aula | Crea y publica proyectos escolares" />
+
+  <meta property="og:description"
+    content="Organiza, importa y prepara tus proyectos escolares para publicarlos en la web de forma sencilla." />
+
+  <meta property="og:url" content="https://devkosmosyneAH.github.io/ProjectShooler/" />
+
+  <meta property="og:image"
+    content="https://raw.githubusercontent.com/devkosmosyneAH/ProjectShooler/refs/heads/main/documents/images/proyecto/foto.jpg" />
+
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Aula - Plataforma de proyectos escolares" />
+
+  <!-- =========================================
+         TWITTER / X CARDS
+    ========================================== -->
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <meta name="twitter:title" content="Aula | Proyectos escolares" />
+
+  <meta name="twitter:description" content="Crea, organiza, importa y publica proyectos escolares." />
+
+  <meta name="twitter:image"
+    content="https://raw.githubusercontent.com/devkosmosyneAH/ProjectShooler/refs/heads/main/documents/images/proyecto/foto.jpg" />
+
+  <!-- =========================================
+         FAVICON E ICONOS
+    ========================================== -->
+  <link rel="icon" type="image/png"
+    href="https://raw.githubusercontent.com/devkosmosyneAH/ProjectShooler/refs/heads/main/public/favicon.ico" />
+  <link rel="apple-touch-icon"
+    href="https://raw.githubusercontent.com/devkosmosyneAH/ProjectShooler/refs/heads/main/public/apple-touch-icon.png" />
+
+  <link rel="manifest"
+    href="https://raw.githubusercontent.com/devkosmosyneAH/ProjectShooler/refs/heads/main/public/site.webmanifest" />
+
+  <!-- =========================================
+         OPTIMIZACIÓN DE RENDIMIENTO
+    ========================================== -->
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <!-- =========================================
+         DATOS ESTRUCTURADOS - GOOGLE
+    ========================================== -->
+  <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Aula",
+        "description": "Herramienta educativa para crear, organizar, importar y preparar proyectos escolares para su publicación web.",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Web",
+        "inLanguage": "es",
+        "browserRequirements": "Requires JavaScript"
+      }
+    </script>
+
+  <!-- =========================================
+         ESTILOS Y APLICACIÓN REACT
+    ========================================== -->
+
+</head>
+
+<body>
+  <!-- Accesibilidad -->
+  <a href="#main-content" class="skip-to-content">
+    Saltar al contenido principal
+  </a>
+
+  <!-- Aplicación -->
+  <div id="root">
+    <noscript>
+      <h1>Aula - Proyectos escolares</h1>
+      <p>
+        Para utilizar esta aplicación necesitas habilitar JavaScript
+        en tu navegador.
+      </p>
+    </noscript>
+  </div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
 </html>

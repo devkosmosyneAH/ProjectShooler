@@ -10,6 +10,7 @@ import App from "./App";
 import { processPdf } from "./utils/pdfProcessor";
 import { createEmptyProject, createProjectFiles } from "./utils/projectData";
 import { analyzeImageFiles } from "./utils/multimedia";
+import { makeQrDataUrl } from "./utils/qr";
 
 vi.mock("./utils/multimedia", async (importOriginal) => {
   const actual = await importOriginal();
@@ -18,6 +19,11 @@ vi.mock("./utils/multimedia", async (importOriginal) => {
 
 vi.mock("./utils/pdfProcessor", () => ({
   processPdf: vi.fn(),
+}));
+
+vi.mock("./utils/qr", () => ({
+  makeQrDataUrl: vi.fn(async () => "data:image/png;base64,qr"),
+  downloadQrPdf: vi.fn(),
 }));
 
 beforeEach(() => {
@@ -153,6 +159,7 @@ test("renders only the public project at the View hash route", async () => {
   expect(
     await screen.findByRole("heading", { name: project.title }),
   ).toBeInTheDocument();
+  expect(document.getElementById("main-content")).toBeInTheDocument();
   expect(screen.getByRole("navigation", { name: /secciones del proyecto/i })).toBeInTheDocument();
   const introductionLink = screen.getByRole("link", {
     name: "Introducción",
@@ -192,6 +199,26 @@ test("renders only the public project at the View hash route", async () => {
     "src",
     expect.stringContaining("/documents/images/proyecto/foto.png"),
   );
+
+  const projectMenu = screen.getByRole("navigation", {
+    name: /secciones del proyecto/i,
+  });
+  const qrButton = within(projectMenu).getByRole("button", {
+    name: /mostrar código qr/i,
+  });
+  fireEvent.click(qrButton);
+  const qrDialog = await screen.findByRole("dialog", {
+    name: /escanea para visitar la página/i,
+  });
+  expect(
+    within(qrDialog).getByRole("img", { name: /código qr para/i }),
+  ).toHaveAttribute("src", "data:image/png;base64,qr");
+  expect(makeQrDataUrl).toHaveBeenCalledWith(window.location.href);
+  expect(within(qrDialog).getByText(/#\/view\//i)).toBeInTheDocument();
+
+  fireEvent.keyDown(qrDialog, { key: "Escape" });
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(qrButton).toHaveFocus();
 });
 
 test("opens and closes the mobile project menu with an edge swipe", async () => {
